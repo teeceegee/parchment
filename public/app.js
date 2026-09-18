@@ -180,6 +180,7 @@ document.querySelectorAll(".view-button").forEach((button) => button.addEventLis
   document.querySelectorAll(".view-button").forEach((item) => item.classList.remove("active"));
   button.classList.add("active");
   state.view = button.dataset.view;
+  if (state.view === "agenda") state.offset = 0;
   loadCalendar();
 }));
 function shiftView(direction) {

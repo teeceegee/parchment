@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f5f1e8" />
+    <title>Parchment Calendar</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="dashboard">
+      <section class="calendar-panel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">PARCHMENT</p>
+            <h1>Household calendar</h1>
+          </div>
+          <div class="clock" aria-label="Current time">
+            <span id="time">--:--</span>
+            <span id="date">Loading…</span>
+          </div>
+        </header>
+
+        <nav class="view-switcher" aria-label="Calendar view">
+          <button class="view-button active" data-view="agenda">Agenda</button>
+          <button class="view-button" data-view="day">Day</button>
+          <button class="view-button" data-view="week">Week</button>
+          <button class="view-button" data-view="month">Month</button>
+        </nav>
+
+        <section class="content">
+        <div class="section-heading">
+          <button class="round-button" id="previous" aria-label="Previous day">‹</button>
+          <div>
+            <p class="eyebrow" id="range-label">TODAY</p>
+            <h2 id="heading">Today</h2>
+          </div>
+          <button class="round-button" id="next" aria-label="Next day">›</button>
+          <button class="today-button" id="today">Today</button>
+        </div>
+
+        <div class="legend" id="legend" aria-label="Calendars"></div>
+        <div class="events" id="events" aria-live="polite"></div>
+        <p class="status" id="status">Connecting…</p>
+        </section>
+      </section>
+
+      <aside class="side-panel">
+        <section class="weather-card" aria-labelledby="weather-heading">
+          <div class="panel-heading"><div><p class="eyebrow">TODAY</p><h2 id="weather-heading">Weather forecast</h2></div><span class="panel-icon">☼</span></div>
+          <div id="weather" class="weather-content"><p class="panel-placeholder">Loading weather…</p></div>
+        </section>
+        <section class="photo-card" aria-labelledby="photo-heading">
+          <div class="panel-heading"><div><p class="eyebrow">NATIONAL GEOGRAPHIC</p><h2 id="photo-heading">Photo of the day</h2></div></div>
+          <div id="photo" class="photo-content"><p class="panel-placeholder">Loading today’s photograph…</p></div>
+        </section>
+      </aside>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

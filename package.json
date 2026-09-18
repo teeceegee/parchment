@@ -1,0 +1,13 @@
+{
+  "name": "parchment",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Parchment local household calendar display",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

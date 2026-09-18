@@ -1,10 +1,13 @@
 import http from "node:http";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const publicDir = join(root, "public");
+const cacheDir = join(root, "cache");
+const photoMetadataPath = join(cacheDir, "natgeo.json");
+const photoImagePath = join(cacheDir, "natgeo-image");
 const port = Number(process.env.PORT || 8080);
 const host = process.env.HOST || "0.0.0.0";
 
@@ -15,6 +18,7 @@ let calendarRefreshPromise = null;
 const weatherCache = { data: null, fetchedAt: 0, promise: null };
 const photoCache = { value: null, fetchedAt: 0 };
 const photoImageCache = { body: null, contentType: "image/jpeg", fetchedAt: 0 };
+let photoHydrationPromise = null;
 
 const colours = {
   Home: "#3867d6",
@@ -88,6 +92,7 @@ function metaContent(html, property) {
 }
 
 async function getNationalGeographicPhoto() {
+  await hydratePhotoCache();
   if (photoCache.value && Date.now() - photoCache.fetchedAt < 24 * 60 * 60 * 1000) return photoCache.value;
   const sourceUrl = process.env.NATGEO_URL || "https://www.nationalgeographic.com/photo-of-the-day";
   const response = await fetch(sourceUrl, { headers: { accept: "text/html" }, signal: AbortSignal.timeout(15000) });
@@ -97,7 +102,34 @@ async function getNationalGeographicPhoto() {
   const value = { configured: Boolean(image), sourceUrl, image: "/api/natgeo-image", imageUrl: image.startsWith("//") ? `https:${image}` : image, title: metaContent(html, "og:title"), description: metaContent(html, "og:description") };
   photoCache.value = value;
   photoCache.fetchedAt = Date.now();
+  persistPhotoCache().catch((error) => console.error("NatGeo cache write failed:", error.message));
   return value;
+}
+
+async function hydratePhotoCache() {
+  if (photoCache.value) return;
+  if (!photoHydrationPromise) {
+    photoHydrationPromise = (async () => {
+      try {
+        const cached = JSON.parse(await readFile(photoMetadataPath, "utf8"));
+        if (cached.value && cached.fetchedAt && Date.now() - cached.fetchedAt < 24 * 60 * 60 * 1000) {
+          photoCache.value = cached.value;
+          photoCache.fetchedAt = cached.fetchedAt;
+          photoImageCache.body = await readFile(photoImagePath);
+          photoImageCache.contentType = cached.contentType || "image/jpeg";
+          photoImageCache.fetchedAt = cached.fetchedAt;
+        }
+      } catch {
+        // A missing or incomplete cache is repopulated from the source below.
+      }
+    })().finally(() => { photoHydrationPromise = null; });
+  }
+  await photoHydrationPromise;
+}
+
+async function persistPhotoCache() {
+  await mkdir(cacheDir, { recursive: true });
+  await writeFile(photoMetadataPath, JSON.stringify({ value: photoCache.value, fetchedAt: photoCache.fetchedAt, contentType: photoImageCache.contentType }));
 }
 
 async function getNationalGeographicImage() {
@@ -109,6 +141,9 @@ async function getNationalGeographicImage() {
   photoImageCache.body = Buffer.from(await response.arrayBuffer());
   photoImageCache.contentType = response.headers.get("content-type") || "image/jpeg";
   photoImageCache.fetchedAt = Date.now();
+  await mkdir(cacheDir, { recursive: true });
+  await writeFile(photoImagePath, photoImageCache.body);
+  await persistPhotoCache();
   return photoImageCache;
 }
 

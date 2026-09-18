@@ -8,7 +8,11 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => (
 function updateClock() {
   const now = new Date();
   $("#time").textContent = formatDate(now, { hour: "2-digit", minute: "2-digit" });
-  $("#date").textContent = formatDate(now, { weekday: "long", day: "numeric", month: "long" });
+  $("#date").innerHTML = [
+    formatDate(now, { weekday: "long", day: "numeric" }),
+    formatDate(now, { month: "long" }),
+    formatDate(now, { year: "numeric" }),
+  ].map((part) => `<span>${escapeHtml(part)}</span>`).join("");
 }
 
 function rangeForState() {

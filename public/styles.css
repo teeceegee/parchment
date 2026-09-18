@@ -49,9 +49,9 @@ h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 0; font-size: clamp(1.8rem, 4vw, 3.2rem); letter-spacing: -.04em; }
 h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); letter-spacing: -.035em; }
 .section-heading h2 { font-size: clamp(1.35rem, 2.4vw, 2rem); }
-.clock { position: fixed; z-index: 2; top: 12px; right: 12px; display: grid; text-align: right; color: var(--ink-muted); }
-.clock #time { color: #25313a; font-size: clamp(1.8rem, 4vw, 2.8rem); font-variant-numeric: tabular-nums; }
-.clock #date { font-size: .9rem; }
+.clock { position: fixed; z-index: 2; top: 12px; right: 12px; display: flex; align-items: center; gap: 14px; color: var(--ink-muted); }
+.clock #time { order: 2; color: #25313a; font-size: clamp(3.4rem, 6vw, 5.2rem); font-variant-numeric: tabular-nums; line-height: .9; }
+.clock #date { order: 1; display: grid; min-width: 132px; text-align: right; font-size: .9rem; line-height: 1.15; }
 .view-switcher { display: flex; gap: 5px; }
 .view-button, .today-button { border: 1px solid transparent; border-radius: 999px; padding: 10px 15px; color: var(--ink-muted); background: transparent; cursor: pointer; }
 .view-button.active, .view-button:focus-visible { color: #fff; background: var(--accent); }

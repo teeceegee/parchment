@@ -178,7 +178,6 @@ function shiftView(direction) {
 }
 $("#previous").addEventListener("click", () => shiftView(-1));
 $("#next").addEventListener("click", () => shiftView(1));
-$("#today").addEventListener("click", () => { state.offset = 0; loadCalendar(); });
 
 updateClock();
 loadCalendar();

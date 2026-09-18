@@ -1,9 +1,23 @@
 const state = { view: "agenda", offset: 0, events: [] };
 const $ = (selector) => document.querySelector(selector);
+let pullStartY = null;
 
 const formatDate = (date, options) => new Intl.DateTimeFormat(undefined, options).format(date);
 const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[character]));
+
+document.addEventListener("touchstart", (event) => {
+  if (event.touches.length === 1 && event.touches[0].clientY <= 32 && window.scrollY === 0) {
+    pullStartY = event.touches[0].clientY;
+  }
+}, { passive: true });
+
+document.addEventListener("touchend", (event) => {
+  if (pullStartY !== null && event.changedTouches.length === 1 && event.changedTouches[0].clientY - pullStartY >= 96) {
+    window.location.reload();
+  }
+  pullStartY = null;
+}, { passive: true });
 
 function updateClock() {
   const now = new Date();

@@ -161,7 +161,7 @@ async function loadPhoto() {
     const photoTitle = data.title || "National Geographic Photo of the Day";
     const cardTitle = photoTitle.split(/\s*\|\s*/)[0];
     $("#photo-heading").textContent = cardTitle;
-    $("#photo").innerHTML = `<button class="photo-link" type="button"><img src="${escapeHtml(data.image)}" alt="${escapeHtml(photoTitle)}" /><span class="photo-caption">${escapeHtml(photoTitle)}</span></button>`;
+    $("#photo").innerHTML = `<button class="photo-link" type="button"><img src="${escapeHtml(data.image)}" alt="${escapeHtml(photoTitle)}" /></button>`;
     $(".photo-link").addEventListener("click", () => {
       const viewer = document.createElement("div");
       viewer.className = "photo-viewer";

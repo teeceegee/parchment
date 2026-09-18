@@ -26,7 +26,7 @@ button { font: inherit; }
 .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .panel-heading h2 { font-size: clamp(1.35rem, 2.4vw, 2rem); }
 .panel-icon { color: var(--accent); font-size: 2rem; }
-.weather-card .panel-icon { position: absolute; top: 12px; right: 18px; }
+.weather-card .panel-icon { position: absolute; top: 0; right: 18px; }
 .panel-icon .weather-icon { width: 140px; height: 150px; }
 .weather-content, .photo-content { min-height: 0; }
 .panel-placeholder { color: var(--ink-muted); }
@@ -56,12 +56,13 @@ button { font: inherit; }
 .calendar-toolbar { display: flex; min-height: 62px; align-items: center; justify-content: space-between; gap: 16px; padding: 0 8px 10px; }
 .section-heading { display: flex; align-items: center; gap: 18px; }
 .eyebrow { margin: 0 0 5px; color: var(--ink-muted); font-size: .75rem; font-weight: 750; letter-spacing: .15em; }
+.forecast-date { font-weight: 850; }
 .eyebrow:empty { display: none; }
 h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 0; font-size: clamp(1.8rem, 4vw, 3.2rem); letter-spacing: -.04em; }
 h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); letter-spacing: -.035em; }
 .section-heading h2 { font-size: clamp(1.35rem, 2.4vw, 2rem); }
-.clock { position: fixed; z-index: 2; top: 12px; right: 12px; display: flex; align-items: center; gap: 14px; color: var(--ink-muted); }
+.clock { position: fixed; z-index: 2; top: 12px; right: 12px; display: flex; align-items: center; gap: 14px; color: var(--ink-muted); cursor: pointer; }
 .clock #time { order: 2; color: #25313a; font-size: clamp(3.4rem, 6vw, 5.2rem); font-variant-numeric: tabular-nums; line-height: .9; }
 .clock #date { order: 1; display: grid; min-width: 132px; text-align: right; font-size: .9rem; line-height: 1.15; }
 .view-switcher { display: flex; gap: 5px; }

@@ -185,10 +185,12 @@ async function loadWeather() {
       $("#weather").innerHTML = "";
       return;
     }
-    const forecastLabel = selectedDate === today
-      ? "· NOW"
-      : `· FORECAST FOR ${formatDate(new Date(`${selectedDate}T00:00:00`), { day: "numeric", month: "short" }).toUpperCase()}`;
-    $("#weather-period").textContent = forecastLabel;
+    if (selectedDate === today) {
+      $("#weather-period").textContent = "· NOW";
+    } else {
+      const forecastDate = formatDate(new Date(`${selectedDate}T00:00:00`), { weekday: "short", day: "numeric", month: "short" }).toUpperCase();
+      $("#weather-period").innerHTML = `· FORECAST FOR <strong class="forecast-date">${forecastDate}</strong>`;
+    }
     const hourly = data.hours.map((item) => `<div class="weather-hour"><span>${formatDate(new Date(item.time), { hour: "2-digit", minute: "2-digit", hour12: false })}</span>${weatherIcon(item.condition, true)}<strong>${Math.round(item.temperature)}°</strong><small>${item.precipitationProbability}% rain</small><small>${Math.round(item.windSpeed)} km/h</small></div>`).join("");
     const sunrise = formatDate(new Date(data.sunrise), { hour: "2-digit", minute: "2-digit", hour12: false });
     const sunset = formatDate(new Date(data.sunset), { hour: "2-digit", minute: "2-digit", hour12: false });
@@ -261,6 +263,10 @@ function shiftView(direction) {
 }
 $("#previous").addEventListener("click", () => shiftView(-1));
 $("#next").addEventListener("click", () => shiftView(1));
+$("#clock").addEventListener("click", () => window.location.reload());
+$("#clock").addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") window.location.reload();
+});
 
 updateClock();
 loadCalendar();

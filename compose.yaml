@@ -6,6 +6,9 @@ services:
     restart: unless-stopped
     ports:
       - "8090:8080"
+    volumes:
+      - ./public:/app/public:ro
+      - ./server.js:/app/server.js:ro
     environment:
       HOST: 0.0.0.0
       PORT: 8080

@@ -14,6 +14,7 @@ const calendarRefreshIntervalMs = 5 * 60 * 1000;
 let calendarRefreshPromise = null;
 const weatherCache = { value: null, fetchedAt: 0 };
 const photoCache = { value: null, fetchedAt: 0 };
+const photoImageCache = { body: null, contentType: "image/jpeg", fetchedAt: 0 };
 
 const colours = {
   Home: "#3867d6",
@@ -76,10 +77,22 @@ async function getNationalGeographicPhoto() {
   if (!response.ok) throw new Error(`National Geographic ${response.status} ${response.statusText}`);
   const html = await response.text();
   const image = metaContent(html, "og:image");
-  const value = { configured: Boolean(image), sourceUrl, image: image.startsWith("//") ? `https:${image}` : image, title: metaContent(html, "og:title"), description: metaContent(html, "og:description") };
+  const value = { configured: Boolean(image), sourceUrl, image: "/api/natgeo-image", imageUrl: image.startsWith("//") ? `https:${image}` : image, title: metaContent(html, "og:title"), description: metaContent(html, "og:description") };
   photoCache.value = value;
   photoCache.fetchedAt = Date.now();
   return value;
+}
+
+async function getNationalGeographicImage() {
+  const photo = await getNationalGeographicPhoto();
+  if (!photo.configured) return null;
+  if (photoImageCache.body && Date.now() - photoImageCache.fetchedAt < 24 * 60 * 60 * 1000) return photoImageCache;
+  const response = await fetch(photo.imageUrl, { signal: AbortSignal.timeout(15000) });
+  if (!response.ok) throw new Error(`National Geographic image ${response.status} ${response.statusText}`);
+  photoImageCache.body = Buffer.from(await response.arrayBuffer());
+  photoImageCache.contentType = response.headers.get("content-type") || "image/jpeg";
+  photoImageCache.fetchedAt = Date.now();
+  return photoImageCache;
 }
 
 function dateAt(dayOffset, hour, minute = 0) {
@@ -293,9 +306,28 @@ const server = http.createServer(async (request, response) => {
 
   if (url.pathname === "/api/natgeo") {
     try {
-      sendJson(response, 200, await getNationalGeographicPhoto());
+      const photo = await getNationalGeographicPhoto();
+      const { imageUrl, ...publicPhoto } = photo;
+      sendJson(response, 200, publicPhoto);
     } catch (error) {
       sendJson(response, 200, { configured: false, error: error.message });
+    }
+    return;
+  }
+
+  if (url.pathname === "/api/natgeo-image") {
+    try {
+      const image = await getNationalGeographicImage();
+      if (!image) {
+        response.writeHead(404);
+        response.end("Image unavailable");
+        return;
+      }
+      response.writeHead(200, { "content-type": image.contentType, "cache-control": "public, max-age=86400" });
+      response.end(image.body);
+    } catch (error) {
+      response.writeHead(502, { "content-type": "text/plain; charset=utf-8" });
+      response.end(`Image unavailable: ${error.message}`);
     }
     return;
   }

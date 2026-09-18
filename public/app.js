@@ -170,7 +170,7 @@ async function loadWeather() {
       $("#weather").innerHTML = '<p class="panel-placeholder">Weather location not configured.</p>';
       return;
     }
-    const hourly = data.hours.map((item) => `<div class="weather-hour"><span>${formatDate(new Date(item.time), { hour: "numeric" })}</span>${weatherIcon(item.condition, true)}<strong>${Math.round(item.temperature)}°</strong><small>${item.precipitationProbability}% rain</small></div>`).join("");
+    const hourly = data.hours.map((item) => `<div class="weather-hour"><span>${formatDate(new Date(item.time), { hour: "2-digit", minute: "2-digit", hour12: false })}</span>${weatherIcon(item.condition, true)}<strong>${Math.round(item.temperature)}°</strong><small>${item.precipitationProbability}% rain</small></div>`).join("");
     $("#weather-icon").innerHTML = weatherIcon(data.current.condition);
     $("#weather").innerHTML = `<div class="current-weather"><strong>${Math.round(data.current.temperature)}°</strong><div><span>${escapeHtml(data.current.condition)}</span><small>Wind ${Math.round(data.current.windSpeed)} km/h</small></div></div><div class="weather-hours">${hourly}</div>`;
   } catch {

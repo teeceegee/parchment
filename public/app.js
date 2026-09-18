@@ -185,7 +185,10 @@ async function loadWeather() {
       $("#weather").innerHTML = "";
       return;
     }
-    $("#weather-period").textContent = selectedDate === today ? "· NOW" : "· FORECAST";
+    const forecastLabel = selectedDate === today
+      ? "· NOW"
+      : `· FORECAST FOR ${formatDate(new Date(`${selectedDate}T00:00:00`), { day: "numeric", month: "short" }).toUpperCase()}`;
+    $("#weather-period").textContent = forecastLabel;
     const hourly = data.hours.map((item) => `<div class="weather-hour"><span>${formatDate(new Date(item.time), { hour: "2-digit", minute: "2-digit", hour12: false })}</span>${weatherIcon(item.condition, true)}<strong>${Math.round(item.temperature)}°</strong><small>${item.precipitationProbability}% rain</small><small>${Math.round(item.windSpeed)} km/h</small></div>`).join("");
     const sunrise = formatDate(new Date(data.sunrise), { hour: "2-digit", minute: "2-digit", hour12: false });
     const sunset = formatDate(new Date(data.sunset), { hour: "2-digit", minute: "2-digit", hour12: false });

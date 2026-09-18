@@ -109,8 +109,8 @@ function renderMonth(events, range) {
     const selected = new Date(`${button.dataset.date}T00:00:00`);
     const today = startOfDay(new Date());
     state.offset = Math.round((selected - today) / 86400000);
-    state.view = "agenda";
-    document.querySelectorAll(".view-button").forEach((item) => item.classList.toggle("active", item.dataset.view === "agenda"));
+    state.view = "day";
+    document.querySelectorAll(".view-button").forEach((item) => item.classList.toggle("active", item.dataset.view === "day"));
     loadCalendar();
   }));
 }

@@ -154,7 +154,16 @@ async function loadPhoto() {
       $("#photo").innerHTML = '<p class="panel-placeholder">Today’s photograph is unavailable.</p>';
       return;
     }
-    $("#photo").innerHTML = `<a class="photo-link" href="${escapeHtml(data.sourceUrl)}" target="_blank" rel="noreferrer"><img src="${escapeHtml(data.image)}" alt="${escapeHtml(data.title || "National Geographic Photo of the Day")}" /><span class="photo-caption">${escapeHtml(data.title || "View today’s photograph")}</span></a>`;
+    $("#photo").innerHTML = `<button class="photo-link" type="button"><img src="${escapeHtml(data.image)}" alt="${escapeHtml(data.title || "National Geographic Photo of the Day")}" /><span class="photo-caption">${escapeHtml(data.title || "View today’s photograph")}</span></button>`;
+    $(".photo-link").addEventListener("click", () => {
+      const viewer = document.createElement("div");
+      viewer.className = "photo-viewer";
+      viewer.setAttribute("role", "dialog");
+      viewer.setAttribute("aria-label", "Photo of the day");
+      viewer.innerHTML = `<img src="${escapeHtml(data.image)}" alt="${escapeHtml(data.title || "National Geographic Photo of the Day")}" />`;
+      viewer.addEventListener("click", () => viewer.remove());
+      document.body.append(viewer);
+    });
   } catch {
     $("#photo").innerHTML = '<p class="panel-placeholder">Today’s photograph is temporarily unavailable.</p>';
   }

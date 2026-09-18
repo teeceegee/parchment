@@ -66,7 +66,10 @@ async function getWeather(requestedDate) {
   const dayIndex = data.daily.time.indexOf(requestedDate);
   if (dayIndex < 0) return { configured: true, available: false, date: requestedDate };
   const current = data.current;
-  const hours = data.hourly.time.map((time, index) => ({ time, temperature: data.hourly.temperature_2m[index], precipitationProbability: data.hourly.precipitation_probability[index], windSpeed: data.hourly.wind_speed_10m[index], condition: weatherCodeLabel(data.hourly.weather_code[index]) })).filter((item) => item.time.startsWith(requestedDate) && (requestedDate !== today || Date.parse(item.time) >= Date.now())).slice(0, 6);
+  const dayHours = data.hourly.time.map((time, index) => ({ time, temperature: data.hourly.temperature_2m[index], precipitationProbability: data.hourly.precipitation_probability[index], windSpeed: data.hourly.wind_speed_10m[index], condition: weatherCodeLabel(data.hourly.weather_code[index]) })).filter((item) => item.time.startsWith(requestedDate));
+  const hours = requestedDate === today
+    ? dayHours.filter((item) => Date.parse(item.time) >= Date.now()).slice(0, 6)
+    : [6, 9, 12, 15, 18, 21].map((hour) => dayHours.find((item) => Number(item.time.slice(11, 13)) === hour)).filter(Boolean);
   const value = { configured: true, available: true, date: requestedDate, timezone: data.timezone, current: { temperature: current.temperature_2m, condition: weatherCodeLabel(current.weather_code), windSpeed: current.wind_speed_10m }, condition: weatherCodeLabel(data.daily.weather_code[dayIndex]), maxTemperature: data.daily.temperature_2m_max[dayIndex], minTemperature: data.daily.temperature_2m_min[dayIndex], windSpeed: data.daily.wind_speed_10m_max[dayIndex], sunrise: data.daily.sunrise[dayIndex], sunset: data.daily.sunset[dayIndex], warnings: [], hours };
   weatherCache.set(requestedDate, { value, fetchedAt: Date.now() });
   return value;

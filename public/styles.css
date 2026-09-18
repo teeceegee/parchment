@@ -29,8 +29,8 @@ button { font: inherit; }
 .weather-content, .photo-content { min-height: 0; }
 .panel-placeholder { color: var(--ink-muted); }
 .current-weather { display: flex; align-items: center; gap: 12px; margin: 10px 0 12px; }
-.weather-icon { width: 42px; height: 46px; flex: 0 0 auto; color: var(--accent); fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
-.weather-icon-small { width: 20px; height: 22px; justify-self: center; color: var(--accent); stroke-width: 2.2; }
+.weather-icon { width: 42px; height: 46px; flex: 0 0 auto; object-fit: contain; }
+.weather-icon-small { width: 24px; height: 26px; justify-self: center; }
 .current-weather > strong { font-size: clamp(2.4rem, 4vw, 3.5rem); font-weight: 500; letter-spacing: -.08em; }
 .current-weather div { display: grid; gap: 3px; }
 .current-weather small { color: var(--ink-muted); }

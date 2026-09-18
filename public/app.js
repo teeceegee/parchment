@@ -8,16 +8,15 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => (
 
 function weatherIcon(condition, small = false) {
   const name = condition.toLowerCase();
-  const storm = name.includes("thunder");
-  const wet = name.includes("rain") || name.includes("showers") || name.includes("drizzle");
-  const snow = name.includes("snow");
-  const cloudy = name.includes("cloud") || name.includes("fog") || wet || snow || storm;
-  const sun = !cloudy || name.includes("partly");
-  const clearSun = `<circle cx="20" cy="20" r="7"/><path d="M20 3v5m0 24v5M3 20h5m24 0h5M8 8l4 4m16 16 4 4M32 8l-4 4M12 28l-4 4"/>`;
-  const partlySun = `<circle cx="28" cy="11" r="6"/><path d="M28 2v3m0 15v3M19 11h3m12 0h3M22 5l2 2m10 10 2 2M34 5l-2 2"/>`;
-  const cloud = `<path d="M10 33h21a7 7 0 0 0 1-13.8A12 12 0 0 0 9 16a8.5 8.5 0 0 0 1 17Z"/>`;
-  const precipitation = storm ? `<path d="m22 25-4 7h5l-3 7"/>` : snow ? `<path d="M15 35v6m-3-3h6m9-3v6m-3-3h6"/>` : `<path d="m16 34-2 5m10-5-2 5m10-5-2 5"/>`;
-  return `<svg class="weather-icon${small ? " weather-icon-small" : ""}" viewBox="0 0 40 44" aria-hidden="true">${name.includes("partly") ? partlySun : sun ? clearSun : ""}${cloudy ? cloud : ""}${(wet || snow || storm) ? precipitation : ""}</svg>`;
+  const slug = name.includes("partly") ? "partly-cloudy-day"
+    : name.includes("thunder") ? "thunderstorms"
+    : name.includes("snow") ? "snow"
+    : name.includes("drizzle") ? "drizzle"
+    : name.includes("rain") || name.includes("showers") ? "rain"
+    : name.includes("fog") ? "fog"
+    : name.includes("cloud") ? "cloudy"
+    : "clear-day";
+  return `<img class="weather-icon${small ? " weather-icon-small" : ""}" src="/weather-icons/${slug}.svg" alt="" aria-hidden="true">`;
 }
 
 document.addEventListener("touchstart", (event) => {

@@ -152,6 +152,7 @@ async function loadCalendar() {
   const range = rangeForState();
   renderHeading(range);
   $("#status").textContent = "Updating…";
+  loadWeather();
   try {
     const query = new URLSearchParams({ from: range.start.toISOString(), to: range.end.toISOString() });
     const response = await fetch(`/api/calendar?${query}`);
@@ -163,7 +164,6 @@ async function loadCalendar() {
     else renderEvents(state.events);
     const stale = data.statuses?.some((item) => item.status !== "ok");
     $("#status").textContent = `${stale ? "Showing cached calendar data · " : ""}Last updated ${formatDate(new Date(), { hour: "numeric", minute: "2-digit" })}`;
-    loadWeather();
   } catch (error) {
     $("#status").textContent = "Unable to update calendar";
   }
@@ -191,7 +191,7 @@ async function loadWeather() {
       const forecastDate = formatDate(new Date(`${selectedDate}T00:00:00`), { weekday: "short", day: "numeric", month: "short" }).toUpperCase();
       $("#weather-period").innerHTML = `· FORECAST FOR <strong class="forecast-date">${forecastDate}</strong>`;
     }
-    const hourly = data.hours.map((item) => `<div class="weather-hour"><span>${formatDate(new Date(item.time), { hour: "2-digit", minute: "2-digit", hour12: false })}</span>${weatherIcon(item.condition, true)}<strong>${Math.round(item.temperature)}°</strong><small>${item.precipitationProbability}% rain</small><small>${Math.round(item.windSpeed)} km/h</small></div>`).join("");
+    const hourly = data.hours.map((item) => `<div class="weather-hour"><span>${formatDate(new Date(item.time), { hour: "2-digit", minute: "2-digit", hour12: false })}</span>${weatherIcon(item.condition, true)}<strong>${Math.round(item.temperature)}°</strong><small>${item.precipitationProbability}% rain</small><small>${Math.round(item.windSpeed)} mph</small></div>`).join("");
     const sunrise = formatDate(new Date(data.sunrise), { hour: "2-digit", minute: "2-digit", hour12: false });
     const sunset = formatDate(new Date(data.sunset), { hour: "2-digit", minute: "2-digit", hour12: false });
     $("#weather-icon").innerHTML = weatherIcon(data.condition);
@@ -201,7 +201,7 @@ async function loadWeather() {
     const temperature = warning
       ? `<button class="temperature warning-temperature" style="--warning-colour:${escapeHtml(warningColour)}" type="button" aria-label="Show weather warning">${Math.round(data.maxTemperature)}°</button>`
       : `<strong class="temperature">${Math.round(data.maxTemperature)}°</strong>`;
-    $("#weather").innerHTML = `<div class="current-weather">${temperature}<div><span>${escapeHtml(data.condition)}</span><small>Low ${Math.round(data.minTemperature)}° · Wind ${Math.round(data.windSpeed)} km/h</small></div><div class="weather-stats"><span>Sunrise <strong>${sunrise}</strong></span><span>Sunset <strong>${sunset}</strong></span></div></div><div class="weather-hours">${hourly}</div>`;
+    $("#weather").innerHTML = `<div class="current-weather">${temperature}<div><span>${escapeHtml(data.condition)}</span><small>Low ${Math.round(data.minTemperature)}° · Wind ${Math.round(data.windSpeed)} mph</small></div><div class="weather-stats"><span>Sunrise <strong>${sunrise}</strong></span><span>Sunset <strong>${sunset}</strong></span></div></div><div class="weather-hours">${hourly}</div>`;
     if (warning) {
       $(".warning-temperature").addEventListener("click", () => {
         const viewer = document.createElement("div");

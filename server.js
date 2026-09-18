@@ -12,7 +12,7 @@ const configuredCalendars = loadCalendarSources();
 const calendarCache = new Map();
 const calendarRefreshIntervalMs = 5 * 60 * 1000;
 let calendarRefreshPromise = null;
-const weatherCache = new Map();
+const weatherCache = { data: null, fetchedAt: 0, promise: null };
 const photoCache = { value: null, fetchedAt: 0 };
 const photoImageCache = { body: null, contentType: "image/jpeg", fetchedAt: 0 };
 
@@ -56,13 +56,20 @@ async function getWeather(requestedDate) {
   forecastEnd.setUTCDate(forecastEnd.getUTCDate() + 15);
   const latestDate = forecastEnd.toISOString().slice(0, 10);
   if (requestedDate < today || requestedDate > latestDate) return { configured: true, available: false, date: requestedDate };
-  const cached = weatherCache.get(requestedDate);
-  if (cached && Date.now() - cached.fetchedAt < 15 * 60 * 1000) return cached.value;
-  const url = new URL("https://api.open-meteo.com/v1/forecast");
-  url.search = new URLSearchParams({ latitude, longitude, timezone, forecast_days: "16", current: "temperature_2m,weather_code,wind_speed_10m", hourly: "temperature_2m,precipitation_probability,weather_code,wind_speed_10m", daily: "temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset,wind_speed_10m_max" });
-  const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
-  if (!response.ok) throw new Error(`Weather ${response.status} ${response.statusText}`);
-  const data = await response.json();
+  if (!weatherCache.data || Date.now() - weatherCache.fetchedAt >= 15 * 60 * 1000) {
+    if (!weatherCache.promise) {
+      const url = new URL("https://api.open-meteo.com/v1/forecast");
+      url.search = new URLSearchParams({ latitude, longitude, timezone, forecast_days: "16", current: "temperature_2m,weather_code,wind_speed_10m", hourly: "temperature_2m,precipitation_probability,weather_code,wind_speed_10m", daily: "temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset,wind_speed_10m_max" });
+      weatherCache.promise = fetch(url, { signal: AbortSignal.timeout(15000) }).then(async (response) => {
+        if (!response.ok) throw new Error(`Weather ${response.status} ${response.statusText}`);
+        weatherCache.data = await response.json();
+        weatherCache.fetchedAt = Date.now();
+        return weatherCache.data;
+      }).finally(() => { weatherCache.promise = null; });
+    }
+    await weatherCache.promise;
+  }
+  const data = weatherCache.data;
   const dayIndex = data.daily.time.indexOf(requestedDate);
   if (dayIndex < 0) return { configured: true, available: false, date: requestedDate };
   const current = data.current;
@@ -70,9 +77,8 @@ async function getWeather(requestedDate) {
   const hours = requestedDate === today
     ? dayHours.filter((item) => Date.parse(item.time) >= Date.now()).slice(0, 6)
     : [6, 9, 12, 15, 18, 21].map((hour) => dayHours.find((item) => Number(item.time.slice(11, 13)) === hour)).filter(Boolean);
-  const value = { configured: true, available: true, date: requestedDate, timezone: data.timezone, current: { temperature: current.temperature_2m, condition: weatherCodeLabel(current.weather_code), windSpeed: current.wind_speed_10m }, condition: weatherCodeLabel(data.daily.weather_code[dayIndex]), maxTemperature: data.daily.temperature_2m_max[dayIndex], minTemperature: data.daily.temperature_2m_min[dayIndex], windSpeed: data.daily.wind_speed_10m_max[dayIndex], sunrise: data.daily.sunrise[dayIndex], sunset: data.daily.sunset[dayIndex], warnings: [], hours };
-  weatherCache.set(requestedDate, { value, fetchedAt: Date.now() });
-  return value;
+  const toMph = (speed) => speed * 0.621371;
+  return { configured: true, available: true, date: requestedDate, timezone: data.timezone, current: { temperature: current.temperature_2m, condition: weatherCodeLabel(current.weather_code), windSpeed: toMph(current.wind_speed_10m) }, condition: weatherCodeLabel(data.daily.weather_code[dayIndex]), maxTemperature: data.daily.temperature_2m_max[dayIndex], minTemperature: data.daily.temperature_2m_min[dayIndex], windSpeed: toMph(data.daily.wind_speed_10m_max[dayIndex]), sunrise: data.daily.sunrise[dayIndex], sunset: data.daily.sunset[dayIndex], warnings: [], hours: hours.map((item) => ({ ...item, windSpeed: toMph(item.windSpeed) })) };
 }
 
 function metaContent(html, property) {

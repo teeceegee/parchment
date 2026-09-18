@@ -10,23 +10,18 @@
   <body>
     <main class="dashboard">
       <section class="calendar-panel">
-        <header class="topbar">
-          <div>
-            <p class="eyebrow">PARCHMENT</p>
-            <h1>Household calendar</h1>
-          </div>
+        <header class="calendar-toolbar">
+          <nav class="view-switcher" aria-label="Calendar view">
+            <button class="view-button active" data-view="agenda">Agenda</button>
+            <button class="view-button" data-view="day">Day</button>
+            <button class="view-button" data-view="week">Week</button>
+            <button class="view-button" data-view="month">Month</button>
+          </nav>
           <div class="clock" aria-label="Current time">
             <span id="time">--:--</span>
             <span id="date">Loading…</span>
           </div>
         </header>
-
-        <nav class="view-switcher" aria-label="Calendar view">
-          <button class="view-button active" data-view="agenda">Agenda</button>
-          <button class="view-button" data-view="day">Day</button>
-          <button class="view-button" data-view="week">Week</button>
-          <button class="view-button" data-view="month">Month</button>
-        </nav>
 
         <section class="content">
         <div class="section-heading">
@@ -47,7 +42,7 @@
 
       <aside class="side-panel">
         <section class="weather-card" aria-labelledby="weather-heading">
-          <div class="panel-heading"><div><p class="eyebrow">TODAY</p><h2 id="weather-heading">Weather forecast</h2></div><span class="panel-icon">☼</span></div>
+          <div class="panel-heading"><div><p class="eyebrow">WEST ALLOTMENT</p><h2 id="weather-heading">Weather</h2></div><span class="panel-icon">☼</span></div>
           <div id="weather" class="weather-content"><p class="panel-placeholder">Loading weather…</p></div>
         </section>
         <section class="photo-card" aria-labelledby="photo-heading">

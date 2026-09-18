@@ -6,6 +6,19 @@ const formatDate = (date, options) => new Intl.DateTimeFormat(undefined, options
 const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[character]));
 
+function weatherIcon(condition, small = false) {
+  const name = condition.toLowerCase();
+  const storm = name.includes("thunder");
+  const wet = name.includes("rain") || name.includes("showers") || name.includes("drizzle");
+  const snow = name.includes("snow");
+  const cloudy = name.includes("cloud") || name.includes("fog") || wet || snow || storm;
+  const sun = !cloudy || name.includes("partly");
+  const rays = `<circle cx="20" cy="20" r="7"/><path d="M20 3v5m0 24v5M3 20h5m24 0h5M8 8l4 4m16 16 4 4M32 8l-4 4M12 28l-4 4"/>`;
+  const cloud = `<path d="M12 31h19a7 7 0 0 0 1-13.9A12 12 0 0 0 9.2 14 8.5 8.5 0 0 0 12 31Z"/>`;
+  const precipitation = storm ? `<path d="m22 25-4 7h5l-3 7"/>` : snow ? `<path d="M15 35v6m-3-3h6m9-3v6m-3-3h6"/>` : `<path d="m16 34-2 5m10-5-2 5m10-5-2 5"/>`;
+  return `<svg class="weather-icon${small ? " weather-icon-small" : ""}" viewBox="0 0 40 44" aria-hidden="true">${sun ? rays : ""}${cloudy ? cloud : ""}${(wet || snow || storm) ? precipitation : ""}</svg>`;
+}
+
 document.addEventListener("touchstart", (event) => {
   if (event.touches.length === 1 && event.touches[0].clientY <= 32 && window.scrollY === 0) {
     pullStartY = event.touches[0].clientY;
@@ -157,8 +170,8 @@ async function loadWeather() {
       $("#weather").innerHTML = '<p class="panel-placeholder">Weather location not configured.</p>';
       return;
     }
-    const hourly = data.hours.map((item) => `<div class="weather-hour"><span>${formatDate(new Date(item.time), { hour: "numeric" })}</span><strong>${Math.round(item.temperature)}°</strong><small>${item.precipitationProbability}% rain</small></div>`).join("");
-    $("#weather").innerHTML = `<div class="current-weather"><strong>${Math.round(data.current.temperature)}°</strong><div><span>${escapeHtml(data.current.condition)}</span><small>Wind ${Math.round(data.current.windSpeed)} km/h</small></div></div><div class="weather-hours">${hourly}</div>`;
+    const hourly = data.hours.map((item) => `<div class="weather-hour"><span>${formatDate(new Date(item.time), { hour: "numeric" })}</span>${weatherIcon(item.condition, true)}<strong>${Math.round(item.temperature)}°</strong><small>${item.precipitationProbability}% rain</small></div>`).join("");
+    $("#weather").innerHTML = `<div class="current-weather">${weatherIcon(data.current.condition)}<strong>${Math.round(data.current.temperature)}°</strong><div><span>${escapeHtml(data.current.condition)}</span><small>Wind ${Math.round(data.current.windSpeed)} km/h</small></div></div><div class="weather-hours">${hourly}</div>`;
   } catch {
     $("#weather").innerHTML = '<p class="panel-placeholder">Weather temporarily unavailable.</p>';
   }

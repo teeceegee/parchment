@@ -28,7 +28,7 @@ function rangeForState() {
 }
 
 function renderHeading(range) {
-  const label = state.view === "month" ? "MONTH" : state.view === "week" ? "WEEK" : state.offset === 0 ? "TODAY" : "DAY";
+  const label = state.view === "month" ? "MONTH" : state.view === "week" ? "WEEK" : state.offset === 0 ? "" : "DAY";
   $("#range-label").textContent = label;
   $("#heading").textContent = state.view === "month"
     ? formatDate(range.monthStart, { month: "long", year: "numeric" })
@@ -48,13 +48,18 @@ function renderEvents(events) {
     container.innerHTML = '<div class="empty">Nothing scheduled. A clear day.</div>';
     return;
   }
+  let previousDay = "";
   container.innerHTML = events.map((item) => {
     const start = new Date(item.start);
     const end = new Date(item.end);
     const location = item.location ? ` · ${item.location}` : "";
-    const dayLabel = state.view === "week" ? `<span class="event-day">${formatDate(start, { weekday: "short", day: "numeric", month: "short" })}</span>` : "";
-    return `<article class="event" style="--event-colour:${escapeHtml(item.colour)}">
-      <time class="event-time" datetime="${item.start}">${dayLabel}${formatDate(start, { hour: "numeric", minute: "2-digit" })}<br><span>to ${formatDate(end, { hour: "numeric", minute: "2-digit" })}</span></time>
+    const dayKey = dateKey(start);
+    const dayHeading = state.view === "week" && dayKey !== previousDay
+      ? `<h3 class="event-day-heading">${formatDate(start, { weekday: "long", day: "numeric", month: "long" })}</h3>`
+      : "";
+    previousDay = dayKey;
+    return `${dayHeading}<article class="event" style="--event-colour:${escapeHtml(item.colour)}">
+      <time class="event-time" datetime="${item.start}">${formatDate(start, { hour: "numeric", minute: "2-digit" })}<br><span>to ${formatDate(end, { hour: "numeric", minute: "2-digit" })}</span></time>
       <span class="event-bar" aria-hidden="true"></span>
       <div><h3 class="event-title">${escapeHtml(item.title)}</h3><p class="event-meta">${escapeHtml(item.calendar)}${escapeHtml(location)}</p></div>
     </article>`;

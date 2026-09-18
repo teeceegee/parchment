@@ -42,6 +42,7 @@ button { font: inherit; }
 .calendar-toolbar { display: flex; min-height: 62px; align-items: center; justify-content: space-between; gap: 16px; padding: 0 8px 10px; }
 .section-heading { display: flex; align-items: center; gap: 18px; }
 .eyebrow { margin: 0 0 5px; color: var(--ink-muted); font-size: .75rem; font-weight: 750; letter-spacing: .15em; }
+.eyebrow:empty { display: none; }
 h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 0; font-size: clamp(1.8rem, 4vw, 3.2rem); letter-spacing: -.04em; }
 h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); letter-spacing: -.035em; }
@@ -74,7 +75,7 @@ h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); letter-spacing: -.035em; 
 .month-indicator { width: 9px; height: 9px; border-radius: 50%; }
 .event { display: grid; grid-template-columns: 82px 8px 1fr; gap: 12px; align-items: stretch; min-height: 64px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 15px; background: var(--paper); }
 .event-time { padding-top: 2px; color: var(--ink-muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
-.event-day { display: block; margin-bottom: 3px; color: #25313a; font-size: .78rem; font-weight: 750; font-variant-numeric: normal; }
+.event-day-heading { grid-column: 1 / -1; margin: 8px 0 0; color: #25313a; font-size: 1rem; }
 .event-bar { border-radius: 999px; background: var(--event-colour); }
 .event-title { margin: 0; font-size: 1.15rem; font-weight: 700; }
 .event-meta { margin: 5px 0 0; color: var(--ink-muted); font-size: .9rem; }

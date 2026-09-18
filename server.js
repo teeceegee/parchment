@@ -12,7 +12,7 @@ const configuredCalendars = loadCalendarSources();
 const calendarCache = new Map();
 const calendarRefreshIntervalMs = 5 * 60 * 1000;
 let calendarRefreshPromise = null;
-const weatherCache = { value: null, fetchedAt: 0 };
+const weatherCache = new Map();
 const photoCache = { value: null, fetchedAt: 0 };
 const photoImageCache = { body: null, contentType: "image/jpeg", fetchedAt: 0 };
 
@@ -45,22 +45,30 @@ function weatherCodeLabel(code) {
   return "Mixed conditions";
 }
 
-async function getWeather() {
+async function getWeather(requestedDate) {
   const latitude = Number(process.env.WEATHER_LATITUDE);
   const longitude = Number(process.env.WEATHER_LONGITUDE);
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return { configured: false };
-  if (weatherCache.value && Date.now() - weatherCache.fetchedAt < 15 * 60 * 1000) return weatherCache.value;
   const timezone = process.env.WEATHER_TIMEZONE || "auto";
+  requestedDate ||= new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
+  const forecastEnd = new Date(`${today}T00:00:00Z`);
+  forecastEnd.setUTCDate(forecastEnd.getUTCDate() + 15);
+  const latestDate = forecastEnd.toISOString().slice(0, 10);
+  if (requestedDate < today || requestedDate > latestDate) return { configured: true, available: false, date: requestedDate };
+  const cached = weatherCache.get(requestedDate);
+  if (cached && Date.now() - cached.fetchedAt < 15 * 60 * 1000) return cached.value;
   const url = new URL("https://api.open-meteo.com/v1/forecast");
-  url.search = new URLSearchParams({ latitude, longitude, timezone, forecast_days: "1", current: "temperature_2m,weather_code,wind_speed_10m", hourly: "temperature_2m,precipitation_probability,weather_code" });
+  url.search = new URLSearchParams({ latitude, longitude, timezone, forecast_days: "16", current: "temperature_2m,weather_code,wind_speed_10m", hourly: "temperature_2m,precipitation_probability,weather_code,wind_speed_10m", daily: "temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset,wind_speed_10m_max" });
   const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`Weather ${response.status} ${response.statusText}`);
   const data = await response.json();
+  const dayIndex = data.daily.time.indexOf(requestedDate);
+  if (dayIndex < 0) return { configured: true, available: false, date: requestedDate };
   const current = data.current;
-  const hours = data.hourly.time.map((time, index) => ({ time, temperature: data.hourly.temperature_2m[index], precipitationProbability: data.hourly.precipitation_probability[index], condition: weatherCodeLabel(data.hourly.weather_code[index]) })).filter((item) => Date.parse(item.time) >= Date.now()).slice(0, 6);
-  const value = { configured: true, timezone: data.timezone, current: { temperature: current.temperature_2m, condition: weatherCodeLabel(current.weather_code), windSpeed: current.wind_speed_10m }, hours };
-  weatherCache.value = value;
-  weatherCache.fetchedAt = Date.now();
+  const hours = data.hourly.time.map((time, index) => ({ time, temperature: data.hourly.temperature_2m[index], precipitationProbability: data.hourly.precipitation_probability[index], windSpeed: data.hourly.wind_speed_10m[index], condition: weatherCodeLabel(data.hourly.weather_code[index]) })).filter((item) => item.time.startsWith(requestedDate) && (requestedDate !== today || Date.parse(item.time) >= Date.now())).slice(0, 6);
+  const value = { configured: true, available: true, date: requestedDate, timezone: data.timezone, current: { temperature: current.temperature_2m, condition: weatherCodeLabel(current.weather_code), windSpeed: current.wind_speed_10m }, condition: weatherCodeLabel(data.daily.weather_code[dayIndex]), maxTemperature: data.daily.temperature_2m_max[dayIndex], minTemperature: data.daily.temperature_2m_min[dayIndex], windSpeed: data.daily.wind_speed_10m_max[dayIndex], sunrise: data.daily.sunrise[dayIndex], sunset: data.daily.sunset[dayIndex], warnings: [], hours };
+  weatherCache.set(requestedDate, { value, fetchedAt: Date.now() });
   return value;
 }
 
@@ -297,7 +305,7 @@ const server = http.createServer(async (request, response) => {
 
   if (url.pathname === "/api/weather") {
     try {
-      sendJson(response, 200, await getWeather());
+      sendJson(response, 200, await getWeather(url.searchParams.get("date") || undefined));
     } catch (error) {
       sendJson(response, 200, { configured: false, error: error.message });
     }

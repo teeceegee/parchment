@@ -36,9 +36,12 @@ button { font: inherit; }
 .current-weather > strong { font-size: clamp(3rem, 5vw, 4.5rem); font-weight: 500; letter-spacing: -.08em; }
 .current-weather div { display: grid; gap: 3px; }
 .current-weather small { color: var(--ink-muted); }
+.weather-stats { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 8px 0 12px; color: var(--ink-muted); font-size: .72rem; }
+.weather-stats span { display: grid; gap: 2px; }
+.weather-stats strong { color: #25313a; font-size: .82rem; }
 .weather-hours { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
 .weather-hour { display: grid; gap: 3px; padding: 5px 3px; border-left: 1px solid var(--line); text-align: center; }
-.weather-hour span, .weather-hour small { color: var(--ink-muted); font-size: .75rem; }
+.weather-hour span, .weather-hour small { color: var(--ink-muted); font-size: .68rem; }
 .weather-hour strong { font-size: 1.15rem; }
 .photo-content { flex: 1; height: auto; min-height: 0; margin-top: 16px; }
 .photo-link { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; border: 0; color: inherit; background: transparent; cursor: pointer; }

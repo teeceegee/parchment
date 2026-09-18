@@ -58,6 +58,12 @@ function rangeForState() {
   return { start: base, end };
 }
 
+function weatherDateForState() {
+  const date = startOfDay(new Date());
+  if (state.view !== "month") date.setDate(date.getDate() + state.offset);
+  return dateKey(date);
+}
+
 function renderHeading(range) {
   const label = state.view === "month" ? "MONTH" : state.view === "week" ? "WEEK" : state.offset === 0 ? "" : "DAY";
   $("#range-label").textContent = label;
@@ -157,6 +163,7 @@ async function loadCalendar() {
     else renderEvents(state.events);
     const stale = data.statuses?.some((item) => item.status !== "ok");
     $("#status").textContent = `${stale ? "Showing cached calendar data · " : ""}Last updated ${formatDate(new Date(), { hour: "numeric", minute: "2-digit" })}`;
+    loadWeather();
   } catch (error) {
     $("#status").textContent = "Unable to update calendar";
   }
@@ -164,16 +171,29 @@ async function loadCalendar() {
 
 async function loadWeather() {
   try {
-    const response = await fetch("/api/weather");
+    const selectedDate = weatherDateForState();
+    const today = dateKey(new Date());
+    const response = await fetch(`/api/weather?date=${selectedDate}`);
     const data = await response.json();
     if (!data.configured) {
       $("#weather").innerHTML = '<p class="panel-placeholder">Weather location not configured.</p>';
       return;
     }
-    const hourly = data.hours.map((item) => `<div class="weather-hour"><span>${formatDate(new Date(item.time), { hour: "2-digit", minute: "2-digit", hour12: false })}</span>${weatherIcon(item.condition, true)}<strong>${Math.round(item.temperature)}°</strong><small>${item.precipitationProbability}% rain</small></div>`).join("");
-    $("#weather-icon").innerHTML = weatherIcon(data.current.condition);
-    $("#weather").innerHTML = `<div class="current-weather"><strong>${Math.round(data.current.temperature)}°</strong><div><span>${escapeHtml(data.current.condition)}</span><small>Wind ${Math.round(data.current.windSpeed)} km/h</small></div></div><div class="weather-hours">${hourly}</div>`;
+    if (!data.available) {
+      $("#weather-period").textContent = "· NO FORECAST AVAILABLE";
+      $("#weather-icon").innerHTML = "";
+      $("#weather").innerHTML = "";
+      return;
+    }
+    $("#weather-period").textContent = selectedDate === today ? "· NOW" : "· FORECAST";
+    const hourly = data.hours.map((item) => `<div class="weather-hour"><span>${formatDate(new Date(item.time), { hour: "2-digit", minute: "2-digit", hour12: false })}</span>${weatherIcon(item.condition, true)}<strong>${Math.round(item.temperature)}°</strong><small>${item.precipitationProbability}% rain</small><small>${Math.round(item.windSpeed)} km/h</small></div>`).join("");
+    const sunrise = formatDate(new Date(data.sunrise), { hour: "2-digit", minute: "2-digit", hour12: false });
+    const sunset = formatDate(new Date(data.sunset), { hour: "2-digit", minute: "2-digit", hour12: false });
+    $("#weather-icon").innerHTML = weatherIcon(data.condition);
+    $("#weather").innerHTML = `<div class="current-weather"><strong>${Math.round(data.maxTemperature)}°</strong><div><span>${escapeHtml(data.condition)}</span><small>Low ${Math.round(data.minTemperature)}° · Wind ${Math.round(data.windSpeed)} km/h</small></div></div><div class="weather-stats"><span>Sunrise <strong>${sunrise}</strong></span><span>Sunset <strong>${sunset}</strong></span><span>Warnings <strong>${data.warnings.length ? data.warnings.join(", ") : "None"}</strong></span></div><div class="weather-hours">${hourly}</div>`;
   } catch {
+    $("#weather-period").textContent = "· NO FORECAST AVAILABLE";
+    $("#weather-icon").innerHTML = "";
     $("#weather").innerHTML = '<p class="panel-placeholder">Weather temporarily unavailable.</p>';
   }
 }

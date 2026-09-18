@@ -190,7 +190,7 @@ async function loadWeather() {
     const sunrise = formatDate(new Date(data.sunrise), { hour: "2-digit", minute: "2-digit", hour12: false });
     const sunset = formatDate(new Date(data.sunset), { hour: "2-digit", minute: "2-digit", hour12: false });
     $("#weather-icon").innerHTML = weatherIcon(data.condition);
-    $("#weather").innerHTML = `<div class="current-weather"><strong>${Math.round(data.maxTemperature)}°</strong><div><span>${escapeHtml(data.condition)}</span><small>Low ${Math.round(data.minTemperature)}° · Wind ${Math.round(data.windSpeed)} km/h</small></div></div><div class="weather-stats"><span>Sunrise <strong>${sunrise}</strong></span><span>Sunset <strong>${sunset}</strong></span><span>Warnings <strong>${data.warnings.length ? data.warnings.join(", ") : "None"}</strong></span></div><div class="weather-hours">${hourly}</div>`;
+    $("#weather").innerHTML = `<div class="current-weather"><strong>${Math.round(data.maxTemperature)}°</strong><div><span>${escapeHtml(data.condition)}</span><small>Low ${Math.round(data.minTemperature)}° · Wind ${Math.round(data.windSpeed)} km/h</small></div><div class="weather-stats"><span>Sunrise <strong>${sunrise}</strong></span><span>Sunset <strong>${sunset}</strong></span><span>Warnings <strong>${data.warnings.length ? data.warnings.join(", ") : "None"}</strong></span></div></div><div class="weather-hours">${hourly}</div>`;
   } catch {
     $("#weather-period").textContent = "· NO FORECAST AVAILABLE";
     $("#weather-icon").innerHTML = "";

@@ -229,7 +229,19 @@ async function loadPhoto() {
     const photoTitle = data.title || "National Geographic Photo of the Day";
     const cardTitle = photoTitle.split(/\s*\|\s*/)[0];
     $("#photo-heading").textContent = cardTitle;
-    $("#photo").innerHTML = `<button class="photo-link" type="button"><img src="${escapeHtml(data.image)}" alt="${escapeHtml(photoTitle)}" /></button>`;
+    $("#photo").innerHTML = `<div class="photo-stage"><button class="photo-link" type="button"><img src="${escapeHtml(data.image)}" alt="${escapeHtml(photoTitle)}" /></button><div class="photo-description"><h3>${escapeHtml(photoTitle.split(/\s*\|\s*/)[0])}</h3><p>${escapeHtml(data.description || "No description is available for today’s photograph.")}</p></div></div>`;
+    const photoStage = $(".photo-stage");
+    let photoSwipeStartY = null;
+    photoStage.addEventListener("touchstart", (event) => {
+      if (event.touches.length === 1) photoSwipeStartY = event.touches[0].clientY;
+    }, { passive: true });
+    photoStage.addEventListener("touchend", (event) => {
+      if (photoSwipeStartY !== null && event.changedTouches.length === 1 && Math.abs(event.changedTouches[0].clientY - photoSwipeStartY) >= 48) photoStage.classList.toggle("show-description");
+      photoSwipeStartY = null;
+    }, { passive: true });
+    photoStage.addEventListener("touchcancel", () => {
+      photoSwipeStartY = null;
+    }, { passive: true });
     $(".photo-link").addEventListener("click", () => {
       const viewer = document.createElement("div");
       viewer.className = "photo-viewer";

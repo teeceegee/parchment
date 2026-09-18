@@ -190,7 +190,22 @@ async function loadWeather() {
     const sunrise = formatDate(new Date(data.sunrise), { hour: "2-digit", minute: "2-digit", hour12: false });
     const sunset = formatDate(new Date(data.sunset), { hour: "2-digit", minute: "2-digit", hour12: false });
     $("#weather-icon").innerHTML = weatherIcon(data.condition);
-    $("#weather").innerHTML = `<div class="current-weather"><strong>${Math.round(data.maxTemperature)}°</strong><div><span>${escapeHtml(data.condition)}</span><small>Low ${Math.round(data.minTemperature)}° · Wind ${Math.round(data.windSpeed)} km/h</small></div><div class="weather-stats"><span>Sunrise <strong>${sunrise}</strong></span><span>Sunset <strong>${sunset}</strong></span><span>Warnings <strong>${data.warnings.length ? data.warnings.join(", ") : "None"}</strong></span></div></div><div class="weather-hours">${hourly}</div>`;
+    const warning = data.warnings?.[0];
+    const warningText = typeof warning === "string" ? warning : warning?.text || "Weather warning";
+    const warningColour = typeof warning === "object" && warning?.colour ? warning.colour : "#c65b3d";
+    const temperature = warning
+      ? `<button class="temperature warning-temperature" style="--warning-colour:${escapeHtml(warningColour)}" type="button" aria-label="Show weather warning">${Math.round(data.maxTemperature)}°</button>`
+      : `<strong class="temperature">${Math.round(data.maxTemperature)}°</strong>`;
+    $("#weather").innerHTML = `<div class="current-weather">${temperature}<div><span>${escapeHtml(data.condition)}</span><small>Low ${Math.round(data.minTemperature)}° · Wind ${Math.round(data.windSpeed)} km/h</small></div><div class="weather-stats"><span>Sunrise <strong>${sunrise}</strong></span><span>Sunset <strong>${sunset}</strong></span></div></div><div class="weather-hours">${hourly}</div>`;
+    if (warning) {
+      $(".warning-temperature").addEventListener("click", () => {
+        const viewer = document.createElement("div");
+        viewer.className = "warning-viewer";
+        viewer.innerHTML = `<div class="warning-box" style="--warning-colour:${escapeHtml(warningColour)}"><h3>Weather warning</h3><p>${escapeHtml(warningText)}</p></div>`;
+        viewer.addEventListener("click", () => viewer.remove());
+        document.body.append(viewer);
+      });
+    }
   } catch {
     $("#weather-period").textContent = "· NO FORECAST AVAILABLE";
     $("#weather-icon").innerHTML = "";

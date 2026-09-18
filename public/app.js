@@ -52,8 +52,9 @@ function renderEvents(events) {
     const start = new Date(item.start);
     const end = new Date(item.end);
     const location = item.location ? ` · ${item.location}` : "";
+    const dayLabel = state.view === "week" ? `<span class="event-day">${formatDate(start, { weekday: "short", day: "numeric", month: "short" })}</span>` : "";
     return `<article class="event" style="--event-colour:${escapeHtml(item.colour)}">
-      <time class="event-time" datetime="${item.start}">${formatDate(start, { hour: "numeric", minute: "2-digit" })}<br><span>to ${formatDate(end, { hour: "numeric", minute: "2-digit" })}</span></time>
+      <time class="event-time" datetime="${item.start}">${dayLabel}${formatDate(start, { hour: "numeric", minute: "2-digit" })}<br><span>to ${formatDate(end, { hour: "numeric", minute: "2-digit" })}</span></time>
       <span class="event-bar" aria-hidden="true"></span>
       <div><h3 class="event-title">${escapeHtml(item.title)}</h3><p class="event-meta">${escapeHtml(item.calendar)}${escapeHtml(location)}</p></div>
     </article>`;

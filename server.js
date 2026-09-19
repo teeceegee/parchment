@@ -54,6 +54,7 @@ async function getWeather(requestedDate) {
   const longitude = Number(process.env.WEATHER_LONGITUDE);
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return { configured: false };
   const timezone = process.env.WEATHER_TIMEZONE || "auto";
+  const testWarning = process.env.WEATHER_TEST_WARNING?.trim();
   requestedDate ||= new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
   const forecastEnd = new Date(`${today}T00:00:00Z`);
@@ -82,7 +83,10 @@ async function getWeather(requestedDate) {
     ? dayHours.filter((item) => Date.parse(item.time) >= Date.now()).slice(0, 6)
     : [6, 9, 12, 15, 18, 21].map((hour) => dayHours.find((item) => Number(item.time.slice(11, 13)) === hour)).filter(Boolean);
   const toMph = (speed) => speed * 0.621371;
-  return { configured: true, available: true, date: requestedDate, timezone: data.timezone, current: { temperature: current.temperature_2m, condition: weatherCodeLabel(current.weather_code), windSpeed: toMph(current.wind_speed_10m) }, condition: weatherCodeLabel(data.daily.weather_code[dayIndex]), maxTemperature: data.daily.temperature_2m_max[dayIndex], minTemperature: data.daily.temperature_2m_min[dayIndex], windSpeed: toMph(data.daily.wind_speed_10m_max[dayIndex]), sunrise: data.daily.sunrise[dayIndex], sunset: data.daily.sunset[dayIndex], warnings: [], hours: hours.map((item) => ({ ...item, windSpeed: toMph(item.windSpeed) })) };
+  const warnings = requestedDate === today && testWarning
+    ? [{ text: testWarning, colour: "#d68b00" }]
+    : [];
+  return { configured: true, available: true, date: requestedDate, timezone: data.timezone, current: { temperature: current.temperature_2m, condition: weatherCodeLabel(current.weather_code), windSpeed: toMph(current.wind_speed_10m) }, condition: weatherCodeLabel(data.daily.weather_code[dayIndex]), maxTemperature: data.daily.temperature_2m_max[dayIndex], minTemperature: data.daily.temperature_2m_min[dayIndex], windSpeed: toMph(data.daily.wind_speed_10m_max[dayIndex]), sunrise: data.daily.sunrise[dayIndex], sunset: data.daily.sunset[dayIndex], warnings, hours: hours.map((item) => ({ ...item, windSpeed: toMph(item.windSpeed) })) };
 }
 
 function metaContent(html, property) {

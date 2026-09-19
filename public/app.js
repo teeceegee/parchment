@@ -65,7 +65,7 @@ function weatherDateForState() {
 }
 
 function renderHeading(range) {
-  const label = state.view === "month" ? "MONTH" : state.view === "week" ? "WEEK" : state.offset === 0 ? "" : "DAY";
+  const label = state.view === "month" ? "MONTH" : state.view === "week" ? "WEEK" : "DAY";
   $("#range-label").textContent = label;
   $("#heading").textContent = state.view === "month"
     ? formatDate(range.monthStart, { month: "long", year: "numeric" })

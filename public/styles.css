@@ -78,16 +78,16 @@ h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); letter-spacing: -.035em; 
 .view-button.active, .view-button:focus-visible { color: #fff; background: var(--accent); }
 .view-button:hover { color: #25313a; background: var(--accent-soft); }
 .today-button { margin-left: auto; border-color: var(--line); background: var(--paper); }
-.content { display: flex; flex: 1; min-height: 0; flex-direction: column; overflow: hidden; padding: clamp(18px, 2.4vw, 26px); border: 0; border-radius: 22px; background: var(--paper); box-shadow: 0 12px 32px #5a4e3518; }
+.content { display: grid; flex: 1; min-height: 0; grid-template-rows: auto auto minmax(0, 1fr) auto auto; overflow: hidden; padding: clamp(18px, 2.4vw, 26px); border: 0; border-radius: 22px; background: var(--paper); box-shadow: 0 12px 32px #5a4e3518; }
 .section-heading { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 3px solid var(--accent-soft); }
 .round-button { width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 50%; color: #25313a; background: var(--paper); font-size: 2rem; line-height: 1; cursor: pointer; }
 .round-button:hover, .today-button:hover { background: #eee9dd; }
 .legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 14px; color: var(--ink-muted); font-size: .85rem; }
 .legend-item { display: inline-flex; align-items: center; gap: 7px; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-.events { display: grid; min-height: 0; flex: 1; gap: 8px; overflow: hidden; }
+.events { display: grid; min-height: 0; align-content: start; gap: 8px; overflow: hidden; }
 .bin-reminders { display: grid; gap: 6px; margin-top: 10px; }
-.bin-reminder { margin: 0; padding: 9px 12px; border-left: 4px solid #4b7780; border-radius: 8px; color: #25313a; background: #e4f0ee; font-size: .82rem; font-weight: 700; }
+.bin-reminder { display: flex; min-height: 72px; align-items: center; margin: 0; padding: 16px 18px; border-left: 7px solid #4b7780; border-radius: 10px; color: #25313a; background: #e4f0ee; font-size: clamp(1rem, 1.6vw, 1.35rem); font-weight: 750; line-height: 1.2; }
 .bin-reminder-put-out { border-left-color: #c65b3d; background: #f8e6df; }
 .bin-reminder span { color: var(--ink-muted); font-weight: 600; }
 .month-grid { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); }

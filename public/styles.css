@@ -62,10 +62,10 @@ button { font: inherit; }
 .warning-box h3 { margin: 0 0 12px; font-size: 1.5rem; }
 .warning-box p { margin: 0; font-size: 1.1rem; line-height: 1.45; }
 .calendar-toolbar { display: flex; min-height: clamp(72px, 5vh, 84px); align-items: center; justify-content: space-between; gap: 16px; padding: 0 8px 10px; }
-.section-heading { display: grid; grid-template-columns: 48px 48px minmax(0, 1fr); align-items: center; gap: 18px; }
+.section-heading { display: grid; grid-template-columns: 44px 44px minmax(0, 1fr); align-items: center; gap: 0; }
 .section-heading #previous { grid-column: 1; grid-row: 1; }
 .section-heading #next { grid-column: 2; grid-row: 1; }
-.section-heading > div { grid-column: 3; grid-row: 1; }
+.section-heading > div { grid-column: 3; grid-row: 1; margin-left: 18px; }
 .eyebrow { margin: 0 0 5px; color: var(--ink-muted); font-size: .75rem; font-weight: 750; letter-spacing: .15em; }
 .forecast-date { color: #000; font-weight: 900; }
 .eyebrow:empty { display: none; }
@@ -83,7 +83,9 @@ h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); letter-spacing: -.035em; 
 .today-button { margin-left: auto; border-color: var(--line); background: var(--paper); }
 .content { display: grid; flex: 1; min-height: 0; grid-template-rows: auto auto minmax(0, 1fr) auto auto; overflow: hidden; padding: clamp(18px, 2.4vw, 26px); border: 0; border-radius: 22px; background: var(--paper); box-shadow: 0 12px 32px #5a4e3518; }
 .section-heading { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 3px solid var(--accent-soft); }
-.round-button { width: 48px; height: 48px; border: 1px solid var(--line); border-radius: 50%; color: #25313a; background: var(--paper); font-size: 2rem; line-height: 1; cursor: pointer; }
+.round-button { width: 44px; height: 44px; border: 0; color: #25313a; background: #eee9dd; font-size: 2rem; line-height: 1; cursor: pointer; }
+.round-button#previous { border-radius: 10px 0 0 10px; }
+.round-button#next { border-left: 1px solid var(--line); border-radius: 0 10px 10px 0; }
 .round-button:hover, .today-button:hover { background: #eee9dd; }
 .legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 14px; color: var(--ink-muted); font-size: .85rem; }
 .legend-item { display: inline-flex; align-items: center; gap: 7px; }

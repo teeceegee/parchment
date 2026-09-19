@@ -9,7 +9,7 @@
   --accent: #c65b3d;
   --accent-soft: #f4ded5;
   --blue-soft: #dcebef;
-  --top-clearance: clamp(16px, 2.5vh, 28px);
+  --top-clearance: clamp(8px, 1.5vh, 16px);
 }
 
 * { box-sizing: border-box; }

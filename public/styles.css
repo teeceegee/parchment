@@ -9,6 +9,7 @@
   --accent: #c65b3d;
   --accent-soft: #f4ded5;
   --blue-soft: #dcebef;
+  --top-clearance: clamp(64px, 8vh, 88px);
 }
 
 * { box-sizing: border-box; }
@@ -16,7 +17,7 @@ html, body { min-height: 100%; }
 body { margin: 0; min-width: 320px; overflow: hidden; background: #eee9dd; }
 button { font: inherit; }
 .ios-top-tint { position: fixed; z-index: 100; top: 0; left: 0; width: 100%; height: 2px; background: #eee9dd; pointer-events: none; }
-.dashboard { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; width: min(1366px, 100vw); height: 100dvh; margin: auto; padding: calc(12px + env(safe-area-inset-top)) 12px 12px; }
+.dashboard { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; width: min(1366px, 100vw); height: 100dvh; margin: auto; padding: calc(12px + env(safe-area-inset-top) + var(--top-clearance)) 12px 12px; }
 .calendar-panel, .side-panel { min-width: 0; }
 .calendar-panel { display: flex; min-height: 0; flex-direction: column; }
 .side-panel { display: grid; min-height: 0; grid-template-rows: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 12px; padding-top: clamp(72px, 5vh, 84px); }
@@ -69,7 +70,7 @@ h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 0; font-size: clamp(1.8rem, 4vw, 3.2rem); letter-spacing: -.04em; }
 h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); letter-spacing: -.035em; }
 .section-heading h2 { font-size: clamp(1.35rem, 2.4vw, 2rem); }
-.clock { position: fixed; z-index: 2; top: calc(12px + env(safe-area-inset-top)); right: 12px; display: flex; align-items: center; gap: 14px; color: var(--ink-muted); cursor: pointer; }
+.clock { position: fixed; z-index: 2; top: calc(12px + env(safe-area-inset-top) + var(--top-clearance)); right: 12px; display: flex; align-items: center; gap: 14px; color: var(--ink-muted); cursor: pointer; }
 .clock #time { order: 2; color: #25313a; font-size: clamp(3.4rem, 6vw, 5.2rem); font-variant-numeric: tabular-nums; line-height: .9; }
 .clock #date { order: 1; display: grid; min-width: 132px; text-align: right; font-size: .9rem; line-height: 1.15; }
 .view-switcher { display: flex; gap: 5px; }
@@ -104,5 +105,5 @@ h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); letter-spacing: -.035em; 
 .event-meta { margin: 5px 0 0; color: var(--ink-muted); font-size: .9rem; }
 .empty { padding: 50px 20px; text-align: center; color: var(--ink-muted); }
 .status { margin: 10px 0 0; color: var(--ink-muted); font-size: .7rem; text-align: right; }
-@media (max-width: 800px) { body { overflow: auto; } .dashboard { height: auto; min-height: 100dvh; grid-template-columns: 1fr; } .calendar-panel, .side-panel { min-height: auto; } .calendar-toolbar { min-height: 62px; } .side-panel { grid-template-rows: auto auto; padding-top: 0; } .panel-icon .weather-icon { width: 76px; height: 82px; } .weather-stats { margin-right: 90px; } .clock { position: static; } .content { overflow: visible; } .events { overflow: visible; } }
+@media (max-width: 800px) { :root { --top-clearance: 0px; } body { overflow: auto; } .dashboard { height: auto; min-height: 100dvh; grid-template-columns: 1fr; } .calendar-panel, .side-panel { min-height: auto; } .calendar-toolbar { min-height: 62px; } .side-panel { grid-template-rows: auto auto; padding-top: 0; } .panel-icon .weather-icon { width: 76px; height: 82px; } .weather-stats { margin-right: 90px; } .clock { position: static; } .content { overflow: visible; } .events { overflow: visible; } }
 @media (max-width: 600px) { .dashboard { padding: 14px; } .calendar-toolbar { align-items: flex-start; flex-direction: column-reverse; } .clock { position: static; margin-left: 0; text-align: left; } .clock #time { font-size: 1.5rem; } .clock #date { max-width: 100px; } .content { padding: 18px 14px; border-radius: 20px; } .event { grid-template-columns: 68px 7px 1fr; gap: 11px; padding: 14px 12px; } .event-title { font-size: 1rem; } .month-day { min-height: 62px; gap: 8px; padding: 10px 3px 8px; font-size: .95rem; } .weekday-row { padding-inline: 4px; font-size: .62rem; } .month-indicator { width: 7px; height: 7px; } }

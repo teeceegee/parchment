@@ -36,7 +36,7 @@ button { font: inherit; }
 .weather-icon { width: 42px; height: 46px; flex: 0 0 auto; object-fit: contain; }
 .weather-icon-small { width: 34px; height: 36px; justify-self: center; }
 .temperature { color: #25313a; font-size: clamp(3rem, 5vw, 4.5rem); font-weight: 500; letter-spacing: -.08em; line-height: 1; }
-.warning-temperature { border: 0; padding: 0; background: transparent; color: var(--warning-colour); cursor: pointer; font: inherit; }
+.warning-temperature { border: 0; padding: 0; background: transparent; color: var(--warning-colour); cursor: pointer; }
 .current-weather div { display: grid; gap: 3px; }
 .current-weather small { color: var(--ink-muted); }
 .weather-stats { display: grid; min-width: 112px; flex: 0 0 auto; gap: 5px; margin: 0 150px 0 auto; color: var(--ink-muted); font-size: .72rem; }

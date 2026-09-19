@@ -15,7 +15,7 @@
 html, body { min-height: 100%; }
 body { margin: 0; min-width: 320px; overflow: hidden; background: #eee9dd; }
 button { font: inherit; }
-.dashboard { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; width: min(1366px, 100vw); height: 100dvh; margin: auto; padding: 12px; }
+.dashboard { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; width: min(1366px, 100vw); height: 100dvh; margin: auto; padding: calc(12px + env(safe-area-inset-top)) 12px 12px; }
 .calendar-panel, .side-panel { min-width: 0; }
 .calendar-panel { display: flex; min-height: 0; flex-direction: column; }
 .side-panel { display: grid; min-height: 0; grid-template-rows: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 12px; padding-top: 62px; }
@@ -68,7 +68,7 @@ h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 0; font-size: clamp(1.8rem, 4vw, 3.2rem); letter-spacing: -.04em; }
 h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); letter-spacing: -.035em; }
 .section-heading h2 { font-size: clamp(1.35rem, 2.4vw, 2rem); }
-.clock { position: fixed; z-index: 2; top: 12px; right: 12px; display: flex; align-items: center; gap: 14px; color: var(--ink-muted); cursor: pointer; }
+.clock { position: fixed; z-index: 2; top: calc(12px + env(safe-area-inset-top)); right: 12px; display: flex; align-items: center; gap: 14px; color: var(--ink-muted); cursor: pointer; }
 .clock #time { order: 2; color: #25313a; font-size: clamp(3.4rem, 6vw, 5.2rem); font-variant-numeric: tabular-nums; line-height: .9; }
 .clock #date { order: 1; display: grid; min-width: 132px; text-align: right; font-size: .9rem; line-height: 1.15; }
 .view-switcher { display: flex; gap: 5px; }

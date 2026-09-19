@@ -1,7 +1,6 @@
 const state = { view: "agenda", offset: 0, events: [] };
 const $ = (selector) => document.querySelector(selector);
 let pullStartY = null;
-let screenSwipeStart = null;
 
 const formatDate = (date, options) => new Intl.DateTimeFormat(undefined, options).format(date);
 const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -31,62 +30,6 @@ document.addEventListener("touchend", (event) => {
     window.location.reload();
   }
   pullStartY = null;
-}, { passive: true });
-
-function formatCameraTime(value) {
-  return value ? `Last received ${formatDate(new Date(value), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false })}` : "No image received";
-}
-
-async function loadCameras() {
-  const target = $("#cameras");
-  target.innerHTML = '<p class="panel-placeholder">Loading cameras…</p>';
-  try {
-    const response = await fetch("/api/cameras");
-    const data = await response.json();
-    if (!data.configured) {
-      target.innerHTML = '<p class="panel-placeholder">Camera service is not configured.</p>';
-      return;
-    }
-    target.innerHTML = data.cameras.map((camera) => `<button class="camera-tile" data-camera-id="${escapeHtml(camera.id)}" type="button">${camera.available ? `<img src="/api/cameras/${escapeHtml(camera.id)}/image?at=${encodeURIComponent(camera.receivedAt || "")}" alt="${escapeHtml(camera.name)}" />` : '<span class="camera-status">No image available</span>'}<span class="camera-label">${escapeHtml(camera.name)}</span><span class="camera-time">${escapeHtml(formatCameraTime(camera.receivedAt))}</span></button>`).join("");
-    document.querySelectorAll(".camera-tile").forEach((tile) => {
-      let startY = null;
-      tile.addEventListener("touchstart", (event) => { if (event.touches.length === 1) startY = event.touches[0].clientY; }, { passive: true });
-      tile.addEventListener("touchend", async (event) => {
-        const deltaY = startY === null || event.changedTouches.length !== 1 ? 0 : event.changedTouches[0].clientY - startY;
-        startY = null;
-        if (deltaY >= 72) {
-          tile.classList.add("refreshing");
-          try { await fetch(`/api/cameras/${tile.dataset.cameraId}/refresh`, { method: "POST" }); } finally { await loadCameras(); }
-          return;
-        }
-        if (Math.abs(deltaY) < 18 && tile.querySelector("img")) {
-          const viewer = document.createElement("div");
-          viewer.className = "camera-viewer";
-          viewer.innerHTML = `<img src="${tile.querySelector("img").src}" alt="${tile.querySelector("img").alt}" />`;
-          viewer.addEventListener("click", () => viewer.remove());
-          document.body.append(viewer);
-        }
-      }, { passive: true });
-    });
-  } catch {
-    target.innerHTML = '<p class="panel-placeholder">Camera images are temporarily unavailable.</p>';
-  }
-}
-
-function setCameraScreen(active) {
-  document.body.classList.toggle("cameras-active", active);
-  if (active) loadCameras();
-}
-
-document.addEventListener("touchstart", (event) => {
-  if (event.touches.length === 1) screenSwipeStart = { x: event.touches[0].clientX, y: event.touches[0].clientY };
-}, { passive: true });
-document.addEventListener("touchend", (event) => {
-  if (!screenSwipeStart || event.changedTouches.length !== 1) return;
-  const deltaX = event.changedTouches[0].clientX - screenSwipeStart.x;
-  const deltaY = event.changedTouches[0].clientY - screenSwipeStart.y;
-  screenSwipeStart = null;
-  if (Math.abs(deltaX) >= 96 && Math.abs(deltaX) > Math.abs(deltaY)) setCameraScreen(deltaX < 0);
 }, { passive: true });
 
 function updateClock() {

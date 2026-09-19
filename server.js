@@ -19,16 +19,6 @@ const weatherCache = { data: null, fetchedAt: 0, promise: null };
 const photoCache = { value: null, fetchedAt: 0 };
 const photoImageCache = { body: null, contentType: "image/jpeg", fetchedAt: 0 };
 let photoHydrationPromise = null;
-const cameraSources = [
-  ["front-door", "Front Door", "camera.front_door_live_view"],
-  ["garden", "Garden", "camera.garden_live_view"],
-  ["tonys-office", "Tony’s Office", "camera.tonys_office_live_view"],
-  ["living-room", "Living Room", "camera.living_room_camera_live_view"],
-  ["car-port-outward", "Car Port Outward", "camera.car_port_outward_live_view"],
-  ["car-port-front", "Car Port Front", "camera.car_port_front_live_view"]
-].map(([id, name, entityId]) => ({ id, name, entityId }));
-const cameraCache = new Map();
-const cameraCacheDir = join(cacheDir, "cameras");
 
 const colours = {
   Home: "#3867d6",
@@ -159,59 +149,6 @@ async function getNationalGeographicImage() {
   await writeFile(photoImagePath, photoImageCache.body);
   await persistPhotoCache();
   return photoImageCache;
-}
-
-function camerasConfigured() {
-  return Boolean(process.env.HOME_ASSISTANT_URL && process.env.HOME_ASSISTANT_TOKEN);
-}
-
-async function hydrateCamera(source) {
-  if (cameraCache.has(source.id)) return cameraCache.get(source.id);
-  const imagePath = join(cameraCacheDir, `${source.id}.image`);
-  const metadataPath = join(cameraCacheDir, `${source.id}.json`);
-  try {
-    const metadata = JSON.parse(await readFile(metadataPath, "utf8"));
-    const entry = { ...metadata, body: await readFile(imagePath) };
-    cameraCache.set(source.id, entry);
-    return entry;
-  } catch {
-    return null;
-  }
-}
-
-async function refreshCamera(source) {
-  if (!camerasConfigured()) throw new Error("Camera service is not configured");
-  const baseUrl = process.env.HOME_ASSISTANT_URL.replace(/\/$/, "");
-  const headers = { authorization: `Bearer ${process.env.HOME_ASSISTANT_TOKEN}` };
-  const [stateResponse, imageResponse] = await Promise.all([
-    fetch(`${baseUrl}/api/states/${source.entityId}`, { headers, signal: AbortSignal.timeout(15000) }),
-    fetch(`${baseUrl}/api/camera_proxy/${source.entityId}`, { headers, signal: AbortSignal.timeout(15000) })
-  ]);
-  if (!imageResponse.ok) throw new Error(`Camera image ${imageResponse.status}`);
-  const entry = {
-    contentType: imageResponse.headers.get("content-type") || "image/jpeg",
-    receivedAt: new Date().toISOString(),
-    sourceUpdatedAt: stateResponse.ok ? (await stateResponse.json()).last_updated || null : null,
-    body: Buffer.from(await imageResponse.arrayBuffer())
-  };
-  await mkdir(cameraCacheDir, { recursive: true });
-  await Promise.all([
-    writeFile(join(cameraCacheDir, `${source.id}.image`), entry.body),
-    writeFile(join(cameraCacheDir, `${source.id}.json`), JSON.stringify({ contentType: entry.contentType, receivedAt: entry.receivedAt, sourceUpdatedAt: entry.sourceUpdatedAt }))
-  ]);
-  cameraCache.set(source.id, entry);
-  return entry;
-}
-
-async function cameraMetadata() {
-  const cameras = await Promise.all(cameraSources.map(async (source) => {
-    let entry = await hydrateCamera(source);
-    if (!entry && camerasConfigured()) {
-      try { entry = await refreshCamera(source); } catch (error) { console.error(`Camera ${source.id} failed:`, error.message); }
-    }
-    return { id: source.id, name: source.name, available: Boolean(entry), receivedAt: entry?.receivedAt || null, sourceUpdatedAt: entry?.sourceUpdatedAt || null };
-  }));
-  return { configured: camerasConfigured(), cameras };
 }
 
 function dateAt(dayOffset, hour, minute = 0) {
@@ -449,41 +386,6 @@ const server = http.createServer(async (request, response) => {
       response.end(`Image unavailable: ${error.message}`);
     }
     return;
-  }
-
-  if (url.pathname === "/api/cameras") {
-    sendJson(response, 200, await cameraMetadata());
-    return;
-  }
-
-  const cameraMatch = url.pathname.match(/^\/api\/cameras\/([a-z0-9-]+)(?:\/(image|refresh))?$/);
-  if (cameraMatch) {
-    const source = cameraSources.find((item) => item.id === cameraMatch[1]);
-    if (!source) {
-      response.writeHead(404);
-      response.end("Camera not found");
-      return;
-    }
-    if (cameraMatch[2] === "refresh" && request.method === "POST") {
-      try {
-        const entry = await refreshCamera(source);
-        sendJson(response, 200, { id: source.id, name: source.name, available: true, receivedAt: entry.receivedAt, sourceUpdatedAt: entry.sourceUpdatedAt });
-      } catch (error) {
-        sendJson(response, 502, { id: source.id, available: false, error: error.message });
-      }
-      return;
-    }
-    if (cameraMatch[2] === "image") {
-      const entry = await hydrateCamera(source);
-      if (!entry) {
-        response.writeHead(404);
-        response.end("Image unavailable");
-        return;
-      }
-      response.writeHead(200, { "content-type": entry.contentType, "cache-control": "no-store" });
-      response.end(entry.body);
-      return;
-    }
   }
 
   await serveStatic(response, url.pathname);

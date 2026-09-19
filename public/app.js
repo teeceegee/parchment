@@ -118,21 +118,21 @@ function binReminderForDate(date) {
 
   if (mainCollection) {
     const bin = Math.abs(daysFromMainAnchor / 7) % 2 === 0 ? "Waste" : "Recycling";
-    return { kind: "collection", text: `Bin collection today: ${bin} & Food Waste` };
+    return { kind: "collection", text: `${bin} & Food Waste` };
   }
   if (day.getDay() === 2) {
     const tomorrow = new Date(day);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowOffset = Math.round((tomorrow - mainCollectionAnchor) / 86400000);
     const bin = Math.abs(tomorrowOffset / 7) % 2 === 0 ? "Waste" : "Recycling";
-    return { kind: "put-out", text: `Put out this evening: ${bin} & Food Waste` };
+    return { kind: "put-out", text: `Tomorrow: ${bin} & Food Waste` };
   }
-  if (gardenCollection) return { kind: "collection", text: "Bin collection today: Garden Waste" };
+  if (gardenCollection) return { kind: "collection", text: "Garden Waste" };
   if (day.getDay() === 5) {
     const tomorrow = new Date(day);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowOffset = Math.round((tomorrow - gardenCollectionAnchor) / 86400000);
-    if (tomorrowOffset >= 0 && tomorrowOffset % 14 === 0) return { kind: "put-out", text: "Put out this evening: Garden Waste" };
+    if (tomorrowOffset >= 0 && tomorrowOffset % 14 === 0) return { kind: "put-out", text: "Tomorrow: Garden Waste" };
   }
   return null;
 }

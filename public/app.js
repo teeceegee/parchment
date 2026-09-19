@@ -107,6 +107,53 @@ function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function binReminderForDate(date) {
+  const day = startOfDay(date);
+  const mainCollectionAnchor = new Date(2026, 8, 23); // Waste collection
+  const gardenCollectionAnchor = new Date(2026, 8, 26);
+  const daysFromMainAnchor = Math.round((day - mainCollectionAnchor) / 86400000);
+  const daysFromGardenAnchor = Math.round((day - gardenCollectionAnchor) / 86400000);
+  const mainCollection = day.getDay() === 3;
+  const gardenCollection = day.getDay() === 6 && daysFromGardenAnchor >= 0 && daysFromGardenAnchor % 14 === 0;
+
+  if (mainCollection) {
+    const bin = Math.abs(daysFromMainAnchor / 7) % 2 === 0 ? "Waste" : "Recycling";
+    return { kind: "collection", text: `Bin collection today: ${bin} & Food Waste` };
+  }
+  if (day.getDay() === 2) {
+    const tomorrow = new Date(day);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowOffset = Math.round((tomorrow - mainCollectionAnchor) / 86400000);
+    const bin = Math.abs(tomorrowOffset / 7) % 2 === 0 ? "Waste" : "Recycling";
+    return { kind: "put-out", text: `Put out this evening: ${bin} & Food Waste` };
+  }
+  if (gardenCollection) return { kind: "collection", text: "Bin collection today: Garden Waste" };
+  if (day.getDay() === 5) {
+    const tomorrow = new Date(day);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowOffset = Math.round((tomorrow - gardenCollectionAnchor) / 86400000);
+    if (tomorrowOffset >= 0 && tomorrowOffset % 14 === 0) return { kind: "put-out", text: "Put out this evening: Garden Waste" };
+  }
+  return null;
+}
+
+function renderBinReminders(range) {
+  const container = $("#bin-reminders");
+  if (state.view === "month") {
+    container.innerHTML = "";
+    return;
+  }
+  const days = state.view === "week"
+    ? Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(range.start);
+      date.setDate(date.getDate() + index);
+      return date;
+    })
+    : [range.start];
+  const reminders = days.map((date) => ({ date, reminder: binReminderForDate(date) })).filter((item) => item.reminder);
+  container.innerHTML = reminders.map(({ date, reminder }) => `<p class="bin-reminder bin-reminder-${reminder.kind}"><span>${state.view === "week" ? `${formatDate(date, { weekday: "short", day: "numeric", month: "short" })} · ` : ""}</span>${escapeHtml(reminder.text)}</p>`).join("");
+}
+
 function renderMonth(events, range) {
   const eventsByDay = new Map();
   for (const item of events) {
@@ -162,6 +209,7 @@ async function loadCalendar() {
     renderLegend(state.events);
     if (state.view === "month") renderMonth(state.events, range);
     else renderEvents(state.events);
+    renderBinReminders(range);
     const stale = data.statuses?.some((item) => item.status !== "ok");
     $("#status").textContent = `${stale ? "Showing cached calendar data · " : ""}Last updated ${formatDate(new Date(), { hour: "numeric", minute: "2-digit" })}`;
   } catch (error) {

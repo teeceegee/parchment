@@ -18,3 +18,5 @@ services:
         required: false
       - path: weather.env
         required: false
+      - path: cameras.env
+        required: false

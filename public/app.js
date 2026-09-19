@@ -5,6 +5,8 @@ let pullStartY = null;
 const formatDate = (date, options) => new Intl.DateTimeFormat(undefined, options).format(date);
 const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[character]));
+const appointmentPattern = /\b(appointment|doctor|gp|dentist|dental|hygienist|orthodont|optician|optometrist|eye test|hospital|clinic|physio|physiotherapy|therapy|therapist|hair|haircut|barber|salon|nail|massage|chiropod|podiat|vaccin|flu jab)\b/i;
+const eventPattern = /\b(concert|gig|cinema|film|movie|theatre|theater|show|festival|match|ticket|booking|reservation|restaurant|dinner|lunch|brunch|exhibition|museum|tour|flight|train)\b/i;
 
 function weatherIcon(condition, small = false) {
   const name = condition.toLowerCase();
@@ -45,6 +47,11 @@ function updateClock() {
 function rangeForState() {
   const base = startOfDay(new Date());
   base.setDate(base.getDate() + state.offset);
+  if (state.view === "appointments" || state.view === "events") {
+    const end = new Date(base);
+    end.setDate(end.getDate() + 31);
+    return { start: base, end };
+  }
   if (state.view === "month") {
     const monthStart = new Date(base.getFullYear(), base.getMonth(), 1);
     const gridStart = new Date(monthStart);
@@ -65,9 +72,15 @@ function weatherDateForState() {
 }
 
 function renderHeading(range) {
-  const label = state.view === "month" ? "MONTH" : state.view === "week" ? "WEEK" : "DAY";
+  const summary = state.view === "appointments" || state.view === "events";
+  const label = summary ? "NEXT 30 DAYS" : state.view === "month" ? "MONTH" : state.view === "week" ? "WEEK" : "DAY";
+  $(".section-heading").classList.toggle("summary-heading", summary);
+  $("#previous").hidden = summary;
+  $("#next").hidden = summary;
   $("#range-label").textContent = label;
-  $("#heading").textContent = state.view === "month"
+  $("#heading").textContent = state.view === "appointments" ? "Appointments"
+    : state.view === "events" ? "Events"
+    : state.view === "month"
     ? formatDate(range.monthStart, { month: "long", year: "numeric" })
     : state.view === "week"
     ? `${formatDate(range.start, { day: "numeric", month: "short" })} – ${formatDate(new Date(range.end - 1), { day: "numeric", month: "short" })}`
@@ -92,6 +105,34 @@ function renderEvents(events) {
     const location = item.location ? ` · ${item.location}` : "";
     const dayKey = dateKey(start);
     const dayHeading = state.view === "week" && dayKey !== previousDay
+      ? `<h3 class="event-day-heading">${formatDate(start, { weekday: "long", day: "numeric", month: "long" })}</h3>`
+      : "";
+    previousDay = dayKey;
+    return `${dayHeading}<article class="event" style="--event-colour:${escapeHtml(item.colour)}">
+      <time class="event-time" datetime="${item.start}">${formatDate(start, { hour: "numeric", minute: "2-digit" })}<br><span>to ${formatDate(end, { hour: "numeric", minute: "2-digit" })}</span></time>
+      <span class="event-bar" aria-hidden="true"></span>
+      <div><h3 class="event-title">${escapeHtml(item.title)}</h3><p class="event-meta">${escapeHtml(item.calendar)}${escapeHtml(location)}</p></div>
+    </article>`;
+  }).join("");
+}
+
+function eventSearchText(item) {
+  return `${item.title || ""} ${item.location || ""} ${item.calendar || ""}`;
+}
+
+function renderUpcomingEvents(events, kind) {
+  const container = $("#events");
+  if (!events.length) {
+    container.innerHTML = `<div class="empty">No ${kind === "appointments" ? "appointments" : "booked events"} in the next 30 days.</div>`;
+    return;
+  }
+  let previousDay = "";
+  container.innerHTML = events.map((item) => {
+    const start = new Date(item.start);
+    const end = new Date(item.end);
+    const location = item.location ? ` · ${item.location}` : "";
+    const dayKey = dateKey(start);
+    const dayHeading = dayKey !== previousDay
       ? `<h3 class="event-day-heading">${formatDate(start, { weekday: "long", day: "numeric", month: "long" })}</h3>`
       : "";
     previousDay = dayKey;
@@ -139,7 +180,7 @@ function binReminderForDate(date) {
 
 function renderBinReminders(range) {
   const container = $("#bin-reminders");
-  if (state.view === "month") {
+  if (state.view === "month" || state.view === "appointments" || state.view === "events") {
     container.innerHTML = "";
     return;
   }
@@ -206,9 +247,15 @@ async function loadCalendar() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     state.events = data.events;
-    renderLegend(state.events);
-    if (state.view === "month") renderMonth(state.events, range);
-    else renderEvents(state.events);
+    const displayEvents = state.view === "appointments"
+      ? state.events.filter((item) => appointmentPattern.test(eventSearchText(item)))
+      : state.view === "events"
+        ? state.events.filter((item) => !appointmentPattern.test(eventSearchText(item)) && eventPattern.test(eventSearchText(item)))
+        : state.events;
+    renderLegend(displayEvents);
+    if (state.view === "month") renderMonth(displayEvents, range);
+    else if (state.view === "appointments" || state.view === "events") renderUpcomingEvents(displayEvents, state.view);
+    else renderEvents(displayEvents);
     renderBinReminders(range);
     const stale = data.statuses?.some((item) => item.status !== "ok");
     $("#status").textContent = `${stale ? "Showing cached calendar data · " : ""}Last updated ${formatDate(new Date(), { hour: "numeric", minute: "2-digit" })}`;
@@ -312,7 +359,7 @@ document.querySelectorAll(".view-button").forEach((button) => button.addEventLis
   document.querySelectorAll(".view-button").forEach((item) => item.classList.remove("active"));
   button.classList.add("active");
   state.view = button.dataset.view;
-  if (state.view === "agenda") state.offset = 0;
+  if (state.view === "agenda" || state.view === "appointments" || state.view === "events") state.offset = 0;
   loadCalendar();
 }));
 function shiftView(direction) {

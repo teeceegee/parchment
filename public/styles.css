@@ -66,6 +66,8 @@ button { font: inherit; }
 .section-heading #previous { grid-column: 1; grid-row: 1; }
 .section-heading #next { grid-column: 2; grid-row: 1; }
 .section-heading > div { grid-column: 3; grid-row: 1; margin-left: 18px; }
+.section-heading.summary-heading { grid-template-columns: minmax(0, 1fr); }
+.section-heading.summary-heading > div { grid-column: 1; margin-left: 0; }
 .eyebrow { margin: 0 0 5px; color: var(--ink-muted); font-size: .75rem; font-weight: 750; letter-spacing: .15em; }
 .forecast-date { color: #000; font-weight: 900; }
 .eyebrow:empty { display: none; }

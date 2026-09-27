@@ -5,7 +5,7 @@ let pullStartY = null;
 const formatDate = (date, options) => new Intl.DateTimeFormat(undefined, options).format(date);
 const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[character]));
-const appointmentPattern = /\b(appointment|doctor|gp|dentist|dental|hygienist|orthodont|optician|optometrist|eye test|hospital|clinic|physio|physiotherapy|therapy|therapist|hair|haircut|barber|salon|nail|massage|chiropod|podiat|vaccin|flu jab)\b/i;
+const appointmentPattern = /\b(appointment|meeting|meet-up|meetup|conference|call|interview|session|lesson|class|school|workshop|briefing|review|check-in|catch-up|consultation|doctor|gp|dentist|dental|hygienist|orthodont|optician|optometrist|eye test|hospital|clinic|physio|physiotherapy|therapy|therapist|hair|haircut|barber|salon|nail|massage|chiropod|podiat|vaccin|flu jab)\b/i;
 const eventPattern = /\b(concert|gig|cinema|film|movie|theatre|theater|show|festival|match|ticket|booking|reservation|restaurant|dinner|lunch|brunch|exhibition|museum|tour|flight|train)\b/i;
 
 function weatherIcon(condition, small = false) {
@@ -89,7 +89,7 @@ function renderHeading(range) {
 
 function renderLegend(events) {
   const calendars = [...new Map(events.map((item) => [item.calendar, item])).values()];
-  $("#legend").innerHTML = calendars.map((item) => `<span class="legend-item"><span class="legend-dot" style="background:${item.colour}"></span>${item.calendar}</span>`).join("");
+  $("#legend").innerHTML = calendars.map((item) => `<span class="legend-item"><span class="legend-dot" style="background:${item.colour}"></span>${item.calendar === "iCloud" ? "Tony" : escapeHtml(item.calendar)}</span>`).join("");
 }
 
 function renderEvents(events) {
@@ -102,16 +102,16 @@ function renderEvents(events) {
   container.innerHTML = events.map((item) => {
     const start = new Date(item.start);
     const end = new Date(item.end);
-    const location = item.location ? ` · ${item.location}` : "";
+    const location = item.location ? `<p class="event-meta">${escapeHtml(item.location)}</p>` : "";
     const dayKey = dateKey(start);
     const dayHeading = state.view === "week" && dayKey !== previousDay
       ? `<h3 class="event-day-heading">${formatDate(start, { weekday: "long", day: "numeric", month: "long" })}</h3>`
       : "";
     previousDay = dayKey;
     return `${dayHeading}<article class="event" style="--event-colour:${escapeHtml(item.colour)}">
-      <time class="event-time" datetime="${item.start}">${formatDate(start, { hour: "numeric", minute: "2-digit" })}<br><span>to ${formatDate(end, { hour: "numeric", minute: "2-digit" })}</span></time>
+      <time class="event-time" datetime="${item.start}"><span class="event-start">${formatDate(start, { hour: "numeric", minute: "2-digit" })}</span><span class="event-end">${formatDate(end, { hour: "numeric", minute: "2-digit" })}</span></time>
       <span class="event-bar" aria-hidden="true"></span>
-      <div><h3 class="event-title">${escapeHtml(item.title)}</h3><p class="event-meta">${escapeHtml(item.calendar)}${escapeHtml(location)}</p></div>
+      <div><h3 class="event-title">${escapeHtml(item.title)}</h3>${location}</div>
     </article>`;
   }).join("");
 }
@@ -130,16 +130,16 @@ function renderUpcomingEvents(events, kind) {
   container.innerHTML = events.map((item) => {
     const start = new Date(item.start);
     const end = new Date(item.end);
-    const location = item.location ? ` · ${item.location}` : "";
+    const location = item.location ? `<p class="event-meta">${escapeHtml(item.location)}</p>` : "";
     const dayKey = dateKey(start);
     const dayHeading = dayKey !== previousDay
       ? `<h3 class="event-day-heading">${formatDate(start, { weekday: "long", day: "numeric", month: "long" })}</h3>`
       : "";
     previousDay = dayKey;
     return `${dayHeading}<article class="event" style="--event-colour:${escapeHtml(item.colour)}">
-      <time class="event-time" datetime="${item.start}">${formatDate(start, { hour: "numeric", minute: "2-digit" })}<br><span>to ${formatDate(end, { hour: "numeric", minute: "2-digit" })}</span></time>
+      <time class="event-time" datetime="${item.start}"><span class="event-start">${formatDate(start, { hour: "numeric", minute: "2-digit" })}</span><span class="event-end">${formatDate(end, { hour: "numeric", minute: "2-digit" })}</span></time>
       <span class="event-bar" aria-hidden="true"></span>
-      <div><h3 class="event-title">${escapeHtml(item.title)}</h3><p class="event-meta">${escapeHtml(item.calendar)}${escapeHtml(location)}</p></div>
+      <div><h3 class="event-title">${escapeHtml(item.title)}</h3>${location}</div>
     </article>`;
   }).join("");
 }
@@ -180,7 +180,7 @@ function binReminderForDate(date) {
 
 function renderBinReminders(range) {
   const container = $("#bin-reminders");
-  if (state.view === "month" || state.view === "appointments" || state.view === "events") {
+  if (state.view !== "agenda") {
     container.innerHTML = "";
     return;
   }

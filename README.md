@@ -12,6 +12,23 @@ npm start
 
 Open <http://localhost:8080>. To test from another device on the LAN, use the host computer's local IP address.
 
+## Development environment
+
+The `development/` checkout is separate from the live Shada deployment. Its Docker Compose setup uses the `parchment-dev` container, port `8080`, and a separate cache volume. The live deployment continues to use its own container and port `8090`.
+
+From this checkout:
+
+```sh
+cp .env.example .env
+cp weather.env.example weather.env
+npm run check
+docker compose -f compose.dev.yaml up --build
+```
+
+Open <http://localhost:8080>, or use `http://<this-computer's-LAN-IP>:8080` from an iPad on the same network. Stop the development server with `Ctrl-C`; remove the development container and its image with `docker compose -f compose.dev.yaml down` when needed. The development cache is intentionally kept in a separate named volume.
+
+The bind mounts mean changes to `public/` are immediately available after a browser refresh. Changes to `server.js` require restarting the Compose service.
+
 ## Endpoints
 
 - `GET /` — calendar display

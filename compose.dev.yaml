@@ -1,0 +1,23 @@
+services:
+  parchment-dev:
+    build: .
+    image: parchment:dev
+    container_name: parchment-dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./public:/app/public:ro
+      - ./server.js:/app/server.js:ro
+      - parchment-dev-cache:/app/cache
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8080
+      NODE_ENV: development
+    env_file:
+      - path: .env
+        required: false
+      - path: weather.env
+        required: false
+
+volumes:
+  parchment-dev-cache:

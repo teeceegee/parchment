@@ -29,6 +29,8 @@ Open <http://localhost:8080>, or use `http://<this-computer's-LAN-IP>:8080` from
 
 The bind mounts mean changes to `public/` are immediately available after a browser refresh. Changes to `server.js` require restarting the Compose service.
 
+For the Shada development deployment, set `PARCHMENT_PORT=8081`; this keeps local development on `8080` while avoiding the live service on Shada.
+
 ## Endpoints
 
 - `GET /` — calendar display

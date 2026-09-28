@@ -4,7 +4,7 @@ services:
     image: parchment:dev
     container_name: parchment-dev
     ports:
-      - "8080:8080"
+      - "${PARCHMENT_PORT:-8080}:8080"
     volumes:
       - ./public:/app/public:ro
       - ./server.js:/app/server.js:ro

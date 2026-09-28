@@ -315,15 +315,15 @@ async function loadWeather() {
 
 async function loadPhoto() {
   try {
-    const response = await fetch("/api/natgeo");
+    const response = await fetch("/api/photo");
     const data = await response.json();
     if (!data.configured) {
       $("#photo").innerHTML = '<p class="panel-placeholder">Today’s photograph is unavailable.</p>';
       return;
     }
-    const photoTitle = data.title || "National Geographic Photo of the Day";
-    const cardTitle = photoTitle.split(/\s*\|\s*/)[0];
-    $("#photo-heading").textContent = cardTitle;
+    const photoTitle = data.title || "Photo of the day";
+    $("#photo-source").textContent = data.source || "PHOTO OF THE DAY";
+    $("#photo-heading").textContent = photoTitle.split(/\s*\|\s*/)[0];
     $("#photo").innerHTML = `<div class="photo-stage"><button class="photo-link" type="button"><img src="${escapeHtml(data.image)}" alt="${escapeHtml(photoTitle)}" /></button><div class="photo-description"><p>${escapeHtml(data.description || "No description is available for today’s photograph.")}</p></div></div>`;
     const photoStage = $(".photo-stage");
     let photoSwipeStartY = null;
@@ -355,6 +355,17 @@ async function loadPhoto() {
   }
 }
 
+function schedulePhotoRefresh() {
+  const now = new Date();
+  const nextHour = new Date(now);
+  nextHour.setMinutes(0, 0, 0);
+  nextHour.setHours(nextHour.getHours() + 1);
+  window.setTimeout(() => {
+    loadPhoto();
+    schedulePhotoRefresh();
+  }, Math.max(1000, nextHour - now));
+}
+
 document.querySelectorAll(".view-button").forEach((button) => button.addEventListener("click", () => {
   document.querySelectorAll(".view-button").forEach((item) => item.classList.remove("active"));
   button.classList.add("active");
@@ -383,7 +394,7 @@ updateClock();
 loadCalendar();
 loadWeather();
 loadPhoto();
+schedulePhotoRefresh();
 setInterval(updateClock, 1000);
 setInterval(loadCalendar, 5 * 60 * 1000);
 setInterval(loadWeather, 15 * 60 * 1000);
-setInterval(loadPhoto, 60 * 60 * 1000);

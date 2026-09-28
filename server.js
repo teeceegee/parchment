@@ -8,6 +8,7 @@ const publicDir = join(root, "public");
 const cacheDir = join(root, "cache");
 const photoMetadataPath = join(cacheDir, "natgeo.json");
 const photoImagePath = join(cacheDir, "natgeo-image");
+const guardianMetadataPath = join(cacheDir, "guardian-photos.json");
 const port = Number(process.env.PORT || 8080);
 const host = process.env.HOST || "0.0.0.0";
 
@@ -19,6 +20,7 @@ const weatherCache = { data: null, fetchedAt: 0, promise: null };
 const photoCache = { value: null, fetchedAt: 0 };
 const photoImageCache = { body: null, contentType: "image/jpeg", fetchedAt: 0 };
 let photoHydrationPromise = null;
+const guardianCache = { items: null, fetchedAt: 0, promise: null };
 
 const colours = {
   Home: "#3867d6",
@@ -93,6 +95,78 @@ function metaContent(html, property) {
   const pattern = new RegExp(`<meta[^>]+(?:property|name)=["']${property}["'][^>]+content=["']([^"']+)["']|<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${property}["']`, "i");
   const match = html.match(pattern);
   return match?.[1] || match?.[2] || "";
+}
+
+function decodeXml(value = "") {
+  return value.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;|&#39;/g, "'");
+}
+
+function xmlTag(block, tag) {
+  const match = block.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i"));
+  return match ? decodeXml(match[1].trim()) : "";
+}
+
+function xmlAttribute(block, name) {
+  const match = block.match(new RegExp(`${name}=["']([^"']+)["']`, "i"));
+  return match ? decodeXml(match[1]) : "";
+}
+
+async function getGuardianPhotos() {
+  const cacheIsFresh = guardianCache.items && Date.now() - guardianCache.fetchedAt < 60 * 60 * 1000;
+  if (cacheIsFresh) return guardianCache.items;
+  if (!guardianCache.promise) {
+    guardianCache.promise = (async () => {
+      const feedUrl = process.env.GUARDIAN_PHOTOS_URL || "https://www.theguardian.com/news/series/ten-best-photographs-of-the-day/rss";
+      const response = await fetch(feedUrl, { headers: { accept: "application/rss+xml, application/xml, text/xml" }, signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw new Error(`Guardian ${response.status} ${response.statusText}`);
+      const xml = await response.text();
+      const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].map((match) => {
+        const block = match[1];
+        const media = [...block.matchAll(/<media:content\b([^>]*)>/gi)]
+          .map((entry) => ({ width: Number(xmlAttribute(entry[1], "width")) || 0, url: xmlAttribute(entry[1], "url") }))
+          .filter((entry) => entry.url)
+          .sort((left, right) => right.width - left.width)[0];
+        return { title: xmlTag(block, "title"), sourceUrl: xmlTag(block, "link"), publishedAt: xmlTag(block, "pubDate"), image: media?.url || "", credit: xmlTag(block, "media:credit") };
+      }).filter((item) => item.title && item.sourceUrl && item.image);
+      guardianCache.items = items;
+      guardianCache.fetchedAt = Date.now();
+      mkdir(cacheDir, { recursive: true }).then(() => writeFile(guardianMetadataPath, JSON.stringify({ items, fetchedAt: guardianCache.fetchedAt }))).catch((error) => console.error("Guardian cache write failed:", error.message));
+      return items;
+    })().finally(() => { guardianCache.promise = null; });
+  }
+  return guardianCache.promise;
+}
+
+async function hydrateGuardianCache() {
+  if (guardianCache.items) return;
+  try {
+    const cached = JSON.parse(await readFile(guardianMetadataPath, "utf8"));
+    if (Array.isArray(cached.items) && cached.fetchedAt && Date.now() - cached.fetchedAt < 60 * 60 * 1000) {
+      guardianCache.items = cached.items;
+      guardianCache.fetchedAt = cached.fetchedAt;
+    }
+  } catch {
+    // A missing or incomplete cache is repopulated from the feed below.
+  }
+}
+
+async function getPhotoOfTheHour() {
+  await hydrateGuardianCache();
+  const hour = Math.floor(Date.now() / (60 * 60 * 1000));
+  const nationalGeographic = await getNationalGeographicPhoto();
+  let guardianPhotos = guardianCache.items || [];
+  if (!guardianPhotos.length) {
+    try {
+      guardianPhotos = await getGuardianPhotos();
+    } catch (error) {
+      console.error("Guardian photo feed unavailable:", error.message);
+    }
+  }
+  if (hour % 2 === 0 || !guardianPhotos.length) {
+    return { ...nationalGeographic, source: "National Geographic" };
+  }
+  const guardian = guardianPhotos[Math.floor(hour / 2) % guardianPhotos.length];
+  return { configured: true, source: "The Guardian", sourceUrl: guardian.sourceUrl, image: guardian.image, title: guardian.title, description: guardian.credit ? `Selected by The Guardian’s picture editors. ${guardian.credit}` : "Selected by The Guardian’s picture editors.", publishedAt: guardian.publishedAt };
 }
 
 async function getNationalGeographicPhoto() {
@@ -365,6 +439,15 @@ const server = http.createServer(async (request, response) => {
       const photo = await getNationalGeographicPhoto();
       const { imageUrl, ...publicPhoto } = photo;
       sendJson(response, 200, publicPhoto);
+    } catch (error) {
+      sendJson(response, 200, { configured: false, error: error.message });
+    }
+    return;
+  }
+
+  if (url.pathname === "/api/photo") {
+    try {
+      sendJson(response, 200, await getPhotoOfTheHour());
     } catch (error) {
       sendJson(response, 200, { configured: false, error: error.message });
     }
